@@ -19,6 +19,8 @@ import {
 
 import {STRINGS} from "@/constants/ui-strings/NhsNumSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
+import {logger} from "@/helpers/logger"
+import {useAuth} from "@/context/AuthProvider"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {validateNhsNumber, normalizeNhsNumber, NhsNumberValidationError} from "@/helpers/validateNhsNumber"
@@ -26,6 +28,7 @@ import {usePageTitle} from "@/hooks/usePageTitle"
 
 export default function NhsNumSearch() {
   const navigate = useNavigate()
+  const auth = useAuth()
   const searchContext = useSearchContext()
   const navigationContext = useNavigationContext()
   const [nhsNumber, setNhsNumber] = useState<string>(
@@ -79,6 +82,14 @@ export default function NhsNumSearch() {
     }
     setErrorKey(null)
     const normalized = normalizeNhsNumber(nhsNumber)
+
+    logger.info("Search submitted", {
+      sessionId: auth.sessionId,
+      userId: auth.userDetails?.sub,
+      orgName: auth.selectedRole?.org_name,
+      orgCode: auth.selectedRole?.org_code,
+      searchType: "NHS Number"
+    }, true)
 
     // clear any previous search context
     navigationContext.startNewNavigationSession()

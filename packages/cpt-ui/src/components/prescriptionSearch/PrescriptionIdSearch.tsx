@@ -26,11 +26,14 @@ import {
   getHighestPriorityError,
   PrescriptionValidationError
 } from "@/helpers/validatePrescriptionDetailsSearch"
+import {useAuth} from "@/context/AuthProvider"
+import {logger} from "@/helpers/logger"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {usePageTitle} from "@/hooks/usePageTitle"
 
 export default function PrescriptionIdSearch() {
+  const auth = useAuth()
   const navigate = useNavigate()
   const errorRef = useRef<HTMLDivElement | null>(null)
   const searchContext = useSearchContext()
@@ -97,6 +100,14 @@ export default function PrescriptionIdSearch() {
     setErrorKey(null) // Clear error on valid submit
 
     const formatted = normalizePrescriptionId(prescriptionId)
+
+    logger.info("Search submitted", {
+      sessionId: auth.sessionId,
+      userId: auth.userDetails?.sub,
+      orgName: auth.selectedRole?.org_name,
+      orgCode: auth.selectedRole?.org_code,
+      searchType: "Prescription ID"
+    }, true)
 
     //clear previous search context
     navigationContext.startNewNavigationSession()

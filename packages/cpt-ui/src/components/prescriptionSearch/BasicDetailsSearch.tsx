@@ -21,6 +21,8 @@ import {validateBasicDetails, getInlineErrors} from "@/helpers/validateBasicDeta
 import {errorFocusMap, ErrorKey, resolveDobInvalidFields} from "@/helpers/basicDetailsValidationMeta"
 import {STRINGS} from "@/constants/ui-strings/BasicDetailsSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
+import {logger} from "@/helpers/logger"
+import {useAuth} from "@/context/AuthProvider"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {usePageTitle} from "@/hooks/usePageTitle"
@@ -39,6 +41,7 @@ export default function BasicDetailsSearch() {
   const [dobErrorFields, setDobErrorFields] = useState<Array<"day" | "month" | "year">>([])
 
   const inlineErrors = getInlineErrors(errors)
+  const auth = useAuth()
   const searchContext = useSearchContext()
   const navigationContext = useNavigationContext()
 
@@ -151,6 +154,14 @@ export default function BasicDetailsSearch() {
 
       return
     }
+
+    logger.info("Search submitted", {
+      sessionId: auth.sessionId,
+      userId: auth.userDetails?.sub,
+      orgName: auth.selectedRole?.org_name,
+      orgCode: auth.selectedRole?.org_code,
+      searchType: "Basic Details"
+    }, true)
 
     //clear any previous search navigation context
     navigationContext.startNewNavigationSession()
