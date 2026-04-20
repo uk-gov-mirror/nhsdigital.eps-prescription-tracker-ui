@@ -10,11 +10,14 @@ import {
   Route
 } from "react-router-dom"
 
+import {logger} from "@/helpers/logger"
 import NhsNumSearch from "@/components/prescriptionSearch/NhsNumSearch"
 import {STRINGS} from "@/constants/ui-strings/NhsNumSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
+import {AuthContext, AuthContextType} from "@/context/AuthProvider"
 import {SearchContext, SearchProviderContextType} from "@/context/SearchProvider"
 import {NavigationProvider} from "@/context/NavigationProvider"
+import {mockAuthState} from "./mocks/AuthStateMock"
 
 const mockNavigationContext = {
   pushNavigation: jest.fn(),
@@ -40,6 +43,34 @@ jest.mock("react-router-dom", () => {
     useNavigate: jest.fn()
   }
 })
+
+const mockAuthContext: AuthContextType = {
+  ...mockAuthState,
+  error: null,
+  user: null,
+  isSignedIn: true,
+  isSigningIn: false,
+  invalidSessionCause: undefined,
+  rolesWithAccess: [],
+  rolesWithoutAccess: [],
+  selectedRole: undefined,
+  userDetails: undefined,
+  isConcurrentSession: false,
+  sessionId: "test-session-id",
+  cognitoSignIn: jest.fn(),
+  cognitoSignOut: jest.fn(),
+  clearAuthState: jest.fn(),
+  hasSingleRoleAccess: jest.fn().mockReturnValue(false),
+  updateSelectedRole: jest.fn(),
+  updateTrackerUserInfo: jest.fn(),
+  updateInvalidSessionCause: jest.fn(),
+  setIsSigningOut: jest.fn(),
+  setStateForSignOut: jest.fn().mockImplementation(() => Promise.resolve()),
+  setStateForSignIn: jest.fn().mockImplementation(() => Promise.resolve()),
+  setSessionTimeoutModalInfo: jest.fn(),
+  setLogoutModalType: jest.fn(),
+  remainingSessionTime: undefined
+}
 
 const mockClearSearchParameters = jest.fn()
 const mockSetPrescriptionId = jest.fn()
@@ -92,22 +123,25 @@ const LocationDisplay = () => {
 
 const renderWithRouter = (ui: React.ReactElement) => {
   return render(
-    <SearchContext.Provider value={defaultSearchState}>
-      <MemoryRouter initialEntries={["/search"]}>
-        <NavigationProvider>
-          <Routes>
-            <Route path="/search" element={ui} />
-            <Route path="*" element={<LocationDisplay />} />
-          </Routes>
-        </NavigationProvider>
-      </MemoryRouter>
-    </SearchContext.Provider>
+    <AuthContext.Provider value={mockAuthContext}>
+      <SearchContext.Provider value={defaultSearchState}>
+        <MemoryRouter initialEntries={["/search"]}>
+          <NavigationProvider>
+            <Routes>
+              <Route path="/search" element={ui} />
+              <Route path="*" element={<LocationDisplay />} />
+            </Routes>
+          </NavigationProvider>
+        </MemoryRouter>
+      </SearchContext.Provider>
+    </AuthContext.Provider>
   )
 }
 
 describe("NhsNumSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
+    jest.spyOn(logger, "info").mockImplementation(jest.fn())
   })
 
   it("redirects to prescription list if valid NHS number", async () => {
@@ -119,6 +153,17 @@ describe("NhsNumSearch", () => {
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
     expect(mockNavigate).toHaveBeenCalledWith(FRONTEND_PATHS.PRESCRIPTION_LIST_CURRENT)
+    expect(logger.info).toHaveBeenCalledWith(
+      "Search submitted",
+      {
+        sessionId: "test-session-id",
+        userId: undefined,
+        orgName: undefined,
+        orgCode: undefined,
+        searchType: "NHS Number"
+      },
+      true
+    )
   })
 
   it("renders label, hint, and submit button", () => {

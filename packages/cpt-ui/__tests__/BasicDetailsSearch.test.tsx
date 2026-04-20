@@ -15,6 +15,7 @@ import {
   Route
 } from "react-router-dom"
 
+import {logger} from "@/helpers/logger"
 import BasicDetailsSearch from "@/components/prescriptionSearch/BasicDetailsSearch"
 import {BasicDetailsSearchType} from "@cpt-ui-common/common-types"
 import {STRINGS} from "@/constants/ui-strings/BasicDetailsSearchStrings"
@@ -169,7 +170,10 @@ const expectFieldHasErrorClass = (testId: string, hasError = true) => {
 }
 
 describe("BasicDetailsSearch", () => {
-  beforeEach(() => jest.resetAllMocks())
+  beforeEach(() => {
+    jest.resetAllMocks()
+    jest.spyOn(logger, "info").mockImplementation(jest.fn())
+  })
   afterEach(() => cleanup())
 
   it("redirects to the patient search results page", async () => {
@@ -199,6 +203,17 @@ describe("BasicDetailsSearch", () => {
       expect(mockSetDobMonth).toHaveBeenCalledWith(formData.dobMonth)
       expect(mockSetDobYear).toHaveBeenCalledWith(formData.dobYear)
       expect(mockSetPostcode).toHaveBeenCalledWith(formData.postcode)
+      expect(logger.info).toHaveBeenCalledWith(
+        "Search submitted",
+        {
+          sessionId: "test-session-id",
+          userId: undefined,
+          orgName: undefined,
+          orgCode: undefined,
+          searchType: "Basic Details"
+        },
+        true
+      )
     })
   })
 

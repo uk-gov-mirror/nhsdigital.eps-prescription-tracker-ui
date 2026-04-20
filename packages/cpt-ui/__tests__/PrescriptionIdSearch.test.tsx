@@ -10,6 +10,7 @@ import {
 } from "react-router-dom"
 
 import {FRONTEND_PATHS} from "@/constants/environment"
+import {logger} from "@/helpers/logger"
 import PrescriptionIdSearch from "@/components/prescriptionSearch/PrescriptionIdSearch"
 import {PRESCRIPTION_ID_SEARCH_STRINGS} from "@/constants/ui-strings/SearchForAPrescriptionStrings"
 import {AuthContext, AuthContextType} from "@/context/AuthProvider"
@@ -131,6 +132,7 @@ describe("PrescriptionIdSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
     jest.clearAllMocks()
+    jest.spyOn(logger, "info").mockImplementation(jest.fn())
   })
 
   it("renders label, hint, and button", () => {
@@ -146,6 +148,21 @@ describe("PrescriptionIdSearch", () => {
     await setup("c0c757a83008c2d93o")
     const location = await screen.findByTestId("location-display")
     expect(location).toHaveTextContent(FRONTEND_PATHS.PRESCRIPTION_LIST_CURRENT)
+  })
+
+  it("logs a Prescription ID search when the form is submitted", async () => {
+    await setup("c0c757a83008c2d93o")
+    expect(logger.info).toHaveBeenCalledWith(
+      "Search submitted",
+      {
+        sessionId: "test-session-id",
+        userId: undefined,
+        orgName: undefined,
+        orgCode: undefined,
+        searchType: "Prescription ID"
+      },
+      true
+    )
   })
 
   describe.each([
