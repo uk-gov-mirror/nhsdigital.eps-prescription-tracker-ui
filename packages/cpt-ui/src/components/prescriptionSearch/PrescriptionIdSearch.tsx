@@ -108,6 +108,7 @@ export default function PrescriptionIdSearch() {
       orgCode: auth.selectedRole?.org_code,
       searchType: "Prescription ID"
     }, true)
+    // WIP
 
     //clear previous search context
     navigationContext.startNewNavigationSession()
