@@ -1,4 +1,5 @@
-export type NhsNumberValidationError = "empty" | "length" | "chars" | "noMatch"
+export type NhsNumberValidationError = "NHS_NUMBER_REQUIRED" | "NHS_NUMBER_INVALID_LENGTH" |
+"NHS_NUMBER_INVALID_CHARS" | "NHS_NUMBER_INVALID_CHECKSUM"
 
 export const normalizeNhsNumber = (input: string): string =>
   input.replace(/\s/g, "")
@@ -26,10 +27,10 @@ export const validateNhsNumber = (
 ): NhsNumberValidationError | null => {
   const cleaned = normalizeNhsNumber(rawInput)
 
-  if (!cleaned) return "empty"
-  if (cleaned.length !== 10) return "length"
-  if (!/^\d+$/.test(cleaned)) return "chars"
-  if (!isValidNhsNumber(cleaned)) return "noMatch"
+  if (!cleaned) return "NHS_NUMBER_REQUIRED"
+  if (cleaned.length !== 10) return "NHS_NUMBER_INVALID_LENGTH"
+  if (!/^\d+$/.test(cleaned)) return "NHS_NUMBER_INVALID_CHARS"
+  if (!isValidNhsNumber(cleaned)) return "NHS_NUMBER_INVALID_CHECKSUM"
 
   return null
 }

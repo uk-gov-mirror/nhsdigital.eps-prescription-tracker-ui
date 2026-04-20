@@ -2,19 +2,17 @@ import {validateShortFormId} from "@/helpers/prescriptionIdChecksum"
 
 // Enum-like type representing all possible validation errors.
 export type PrescriptionValidationError =
-  | "empty"
-  | "chars"
-  | "length"
-  | "combined"
-  | "noMatch"
+  | "PRESCRIPTION_ID_REQUIRED"
+  | "PRESCRIPTION_ID_INVALID_CHARS"
+  | "PRESCRIPTION_ID_INVALID_LENGTH"
+  | "PRESCRIPTION_ID_INVALID_CHECKSUM"
 
 // Defines the order of error precedence when multiple issues are present.
 export const PRIORITY_ORDER: Array<PrescriptionValidationError> = [
-  "combined",
-  "empty",
-  "chars",
-  "length",
-  "noMatch"
+  "PRESCRIPTION_ID_REQUIRED",
+  "PRESCRIPTION_ID_INVALID_CHARS",
+  "PRESCRIPTION_ID_INVALID_LENGTH",
+  "PRESCRIPTION_ID_INVALID_CHECKSUM"
 ]
 
 // Converts a raw prescription ID string into a normalized format
@@ -38,7 +36,7 @@ export const validatePrescriptionId = (
 
   // Check for empty input
   if (!raw) {
-    return ["empty"]
+    return ["PRESCRIPTION_ID_REQUIRED"]
   }
 
   // Determine whether input contains invalid characters
@@ -48,18 +46,15 @@ export const validatePrescriptionId = (
   const cleaned = raw.replace(/[^a-zA-Z0-9+]/g, "").toUpperCase()
   const isInvalidLength = cleaned.length !== 18
 
-  // Return combined error if both character and length checks fail
-  if (
-    hasInvalidChars &&
-    isInvalidLength &&
-    raw.length !== 18 // Only combine if the original input length is not 18
-  ) {
-    return ["combined"]
-  }
+  // Return multiple errors for independent validation issues
+  const errors: Array<PrescriptionValidationError> = []
+  if (hasInvalidChars) errors.push("PRESCRIPTION_ID_INVALID_CHARS")
+  if (isInvalidLength) errors.push("PRESCRIPTION_ID_INVALID_LENGTH")
 
-  // Return specific individual errors if present
-  if (hasInvalidChars) return ["chars"]
-  if (isInvalidLength) return ["length"]
+  // If we have character or length errors, don't proceed to checksum validation
+  if (errors.length > 0) {
+    return errors
+  }
 
   // Format the cleaned input into expected prescription ID structure
   const formatted = normalizePrescriptionId(cleaned)
@@ -67,12 +62,12 @@ export const validatePrescriptionId = (
   // Validate structure of formatted ID
   const shortFormPattern = /^[0-9A-F]{6}-[0-9A-Z]{6}-[0-9A-F]{5}[0-9A-Z+]$/
   if (!shortFormPattern.test(formatted)) {
-    return ["noMatch"]
+    return ["PRESCRIPTION_ID_INVALID_CHECKSUM"]
   }
 
   // Validate checksum using MOD 37-2 algorithm
   if (!validateShortFormId(formatted)) {
-    return ["noMatch"]
+    return ["PRESCRIPTION_ID_INVALID_CHECKSUM"]
   }
 
   // Return empty array if no validation errors were found

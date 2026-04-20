@@ -23,11 +23,14 @@ import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {validateNhsNumber, normalizeNhsNumber, NhsNumberValidationError} from "@/helpers/validateNhsNumber"
 import {usePageTitle} from "@/hooks/usePageTitle"
+import {useAuth} from "@/context/AuthProvider"
+import {logger} from "@/helpers/logger"
 
 export default function NhsNumSearch() {
   const navigate = useNavigate()
   const searchContext = useSearchContext()
   const navigationContext = useNavigationContext()
+  const authContext = useAuth()
   const [nhsNumber, setNhsNumber] = useState<string>(
     searchContext.nhsNumber || ""
   )
@@ -75,6 +78,16 @@ export default function NhsNumSearch() {
 
     if (validationError) {
       setErrorKey(validationError)
+
+      logger.debug("Form validation errors", {
+        sessionId: authContext.sessionId,
+        userId: authContext.userDetails?.sub,
+        orgName: authContext.selectedRole?.org_name,
+        orgCode: authContext.selectedRole?.org_code,
+        searchType: "nhsNumberSearch",
+        errors: [validationError]
+      }, true)
+
       return
     }
     setErrorKey(null)

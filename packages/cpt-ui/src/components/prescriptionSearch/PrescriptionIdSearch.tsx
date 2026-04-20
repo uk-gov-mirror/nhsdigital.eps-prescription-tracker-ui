@@ -29,12 +29,15 @@ import {
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {usePageTitle} from "@/hooks/usePageTitle"
+import {logger} from "@/helpers/logger"
+import {useAuth} from "@/context/AuthProvider"
 
 export default function PrescriptionIdSearch() {
   const navigate = useNavigate()
   const errorRef = useRef<HTMLDivElement | null>(null)
   const searchContext = useSearchContext()
   const navigationContext = useNavigationContext()
+  const authContext = useAuth()
 
   const [prescriptionId, setPrescriptionId] = useState<string>(searchContext.prescriptionId || "")
   const [errorKey, setErrorKey] = useState<PrescriptionValidationError | null>(null)
@@ -53,13 +56,11 @@ export default function PrescriptionIdSearch() {
     : PRESCRIPTION_ID_SEARCH_STRINGS.pageTitle)
 
   // Maps a validation error key to the corresponding user-facing message.
-  // Treats "checksum" as "noMatch" to simplify the error display logic.
   const getDisplayedErrorMessage = (
     key: PrescriptionValidationError | null
   ): string => {
     if (!key) return ""
-    if (key === "noMatch") return errorMessages.noMatch
-    return errorMessages[key] || errorMessages.noMatch
+    return errorMessages[key] || errorMessages.PRESCRIPTION_ID_INVALID_CHECKSUM
   }
 
   // Memoised error message for display
@@ -92,6 +93,16 @@ export default function PrescriptionIdSearch() {
 
     if (key) {
       setErrorKey(key)
+
+      logger.debug("Form validation errors", {
+        sessionId: authContext.sessionId,
+        userId: authContext.userDetails?.sub,
+        orgName: authContext.selectedRole?.org_name,
+        orgCode: authContext.selectedRole?.org_code,
+        searchType: "prescriptionIDSearch",
+        errors: validationErrors
+      }, true)
+
       return
     }
     setErrorKey(null) // Clear error on valid submit

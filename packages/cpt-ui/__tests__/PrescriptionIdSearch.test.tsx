@@ -149,13 +149,17 @@ describe("PrescriptionIdSearch", () => {
   })
 
   describe.each([
-    ["empty input", "", PRESCRIPTION_ID_SEARCH_STRINGS.errors.empty],
-    ["invalid characters only", "12345678901234567!", PRESCRIPTION_ID_SEARCH_STRINGS.errors.chars],
-    ["invalid length only", "12345678901234567", PRESCRIPTION_ID_SEARCH_STRINGS.errors.length],
-    ["invalid length + invalid characters", "12345678901234!@#", PRESCRIPTION_ID_SEARCH_STRINGS.errors.combined],
-    ["invalid length + invalid characters", "12345678901234567890!", PRESCRIPTION_ID_SEARCH_STRINGS.errors.combined],
-    ["invalid format (not matching short-form)", "H0C757X83008C2G93O", PRESCRIPTION_ID_SEARCH_STRINGS.errors.noMatch],
-    ["checksum failure", "C0C757A83008C2D93X", PRESCRIPTION_ID_SEARCH_STRINGS.errors.noMatch]
+    ["empty input", "", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_REQUIRED],
+    ["invalid characters only", "12345678901234567!",
+      PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHARS],
+    ["invalid length only", "12345678901234567", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_LENGTH],
+    ["invalid characters (with valid length)",
+      "12345678901234567!", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHARS],
+    ["invalid characters and length", "12345678901234567890!",
+      PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHARS],
+    ["invalid format (not matching short-form)",
+      "H0C757X83008C2G93O", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHECKSUM],
+    ["checksum failure", "C0C757A83008C2D93X", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHECKSUM]
   ])("validation error: %s", (_desc, input, expectedError) => {
     it(`shows "${expectedError}"`, async () => {
       await setup(input)

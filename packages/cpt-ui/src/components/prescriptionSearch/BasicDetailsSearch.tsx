@@ -24,10 +24,13 @@ import {FRONTEND_PATHS} from "@/constants/environment"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {usePageTitle} from "@/hooks/usePageTitle"
+import {logger} from "@/helpers/logger"
+import {useAuth} from "@/context/AuthProvider"
 
 export default function BasicDetailsSearch() {
   const navigate = useNavigate()
   const errorRef = useRef<HTMLDivElement | null>(null)
+  const authContext = useAuth()
 
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -123,6 +126,15 @@ export default function BasicDetailsSearch() {
     // DOB field highlights are preserved until the next form submission.
     if (newErrors.length > 0) {
       setErrors(newErrors)
+
+      logger.debug("Form validation errors", {
+        sessionId: authContext.sessionId,
+        userId: authContext.userDetails?.sub,
+        orgName: authContext.selectedRole?.org_name,
+        orgCode: authContext.selectedRole?.org_code,
+        searchType: "basicDetailsSearch",
+        errors: newErrors
+      }, true)
 
       const dobErrorKeys = new Set([
         "DOB_REQUIRED",

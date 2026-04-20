@@ -13,8 +13,10 @@ import {
 import NhsNumSearch from "@/components/prescriptionSearch/NhsNumSearch"
 import {STRINGS} from "@/constants/ui-strings/NhsNumSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
+import {AuthContext, AuthContextType} from "@/context/AuthProvider"
 import {SearchContext, SearchProviderContextType} from "@/context/SearchProvider"
 import {NavigationProvider} from "@/context/NavigationProvider"
+import {mockAuthState} from "./mocks/AuthStateMock"
 
 const mockNavigationContext = {
   pushNavigation: jest.fn(),
@@ -40,6 +42,36 @@ jest.mock("react-router-dom", () => {
     useNavigate: jest.fn()
   }
 })
+
+// Mock auth context
+const mockCognitoSignIn = jest.fn()
+const mockCognitoSignOut = jest.fn()
+const mockClearAuthState = jest.fn()
+
+const signedInAuthState: AuthContextType = {
+  ...mockAuthState,
+  isSignedIn: true,
+  isSigningIn: false,
+  invalidSessionCause: undefined,
+  user: "testUser",
+  error: null,
+  rolesWithAccess: [],
+  rolesWithoutAccess: [],
+  selectedRole: undefined,
+  userDetails: undefined,
+  isConcurrentSession: false,
+  sessionId: "test-session-id",
+  remainingSessionTime: undefined,
+  cognitoSignIn: mockCognitoSignIn,
+  cognitoSignOut: mockCognitoSignOut,
+  clearAuthState: mockClearAuthState,
+  hasSingleRoleAccess: jest.fn().mockReturnValue(false),
+  updateSelectedRole: jest.fn(),
+  updateTrackerUserInfo: jest.fn(),
+  updateInvalidSessionCause: jest.fn(),
+  isSigningOut: false,
+  setIsSigningOut: jest.fn()
+}
 
 const mockClearSearchParameters = jest.fn()
 const mockSetPrescriptionId = jest.fn()
@@ -92,16 +124,18 @@ const LocationDisplay = () => {
 
 const renderWithRouter = (ui: React.ReactElement) => {
   return render(
-    <SearchContext.Provider value={defaultSearchState}>
-      <MemoryRouter initialEntries={["/search"]}>
-        <NavigationProvider>
-          <Routes>
-            <Route path="/search" element={ui} />
-            <Route path="*" element={<LocationDisplay />} />
-          </Routes>
-        </NavigationProvider>
-      </MemoryRouter>
-    </SearchContext.Provider>
+    <AuthContext.Provider value={signedInAuthState}>
+      <SearchContext.Provider value={defaultSearchState}>
+        <MemoryRouter initialEntries={["/search"]}>
+          <NavigationProvider>
+            <Routes>
+              <Route path="/search" element={ui} />
+              <Route path="*" element={<LocationDisplay />} />
+            </Routes>
+          </NavigationProvider>
+        </MemoryRouter>
+      </SearchContext.Provider>
+    </AuthContext.Provider>
   )
 }
 

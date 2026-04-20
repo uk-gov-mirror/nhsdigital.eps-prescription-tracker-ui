@@ -8,10 +8,10 @@ export const PRESCRIPTION_ID_SEARCH_STRINGS = {
   buttonText: "Find a prescription",
   errorSummaryHeading: "There is a problem",
   errors: {
-    empty: "Enter a prescription ID number",
-    length: "The prescription ID number must contain 18 characters",
-    chars: "The prescription ID number must contain only letters, numbers, dashes or the + character",
-    noMatch: "The prescription ID number is not recognised",
-    combined: "Prescription ID must be 18 characters and can only contain letters, numbers, dashes or the + character"
+    PRESCRIPTION_ID_REQUIRED: "Enter a prescription ID number",
+    PRESCRIPTION_ID_INVALID_LENGTH: "The prescription ID number must contain 18 characters",
+    PRESCRIPTION_ID_INVALID_CHARS: "The prescription ID number must contain only letters, "
+    + "numbers, dashes or the + character",
+    PRESCRIPTION_ID_INVALID_CHECKSUM: "The prescription ID number is not recognised"
   }
 }

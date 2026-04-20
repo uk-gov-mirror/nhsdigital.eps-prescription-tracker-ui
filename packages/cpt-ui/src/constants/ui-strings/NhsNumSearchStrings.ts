@@ -7,9 +7,9 @@ export const STRINGS = {
   buttonText: "Find a patient",
   errorSummaryHeading: "There is a problem",
   errors: {
-    empty: "Enter an NHS number",
-    length: "NHS number must have 10 digits",
-    chars: "Enter an NHS number in the correct format",
-    noMatch: "NHS number does not match a patient, enter another NHS number"
+    NHS_NUMBER_REQUIRED: "Enter an NHS number",
+    NHS_NUMBER_INVALID_LENGTH: "NHS number must have 10 digits",
+    NHS_NUMBER_INVALID_CHARS: "Enter an NHS number in the correct format",
+    NHS_NUMBER_INVALID_CHECKSUM: "NHS number does not match a patient, enter another NHS number"
   }
 }
