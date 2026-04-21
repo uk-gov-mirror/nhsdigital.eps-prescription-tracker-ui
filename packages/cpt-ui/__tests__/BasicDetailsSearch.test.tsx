@@ -221,6 +221,19 @@ describe("BasicDetailsSearch", () => {
     })
   })
 
+  it("does not log when validation fails", async () => {
+    const mockNavigate = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(mockNavigate)
+
+    renderWithRouter(<BasicDetailsSearch />, defaultSearchState)
+
+    // Submit form with missing required fields
+    await submitForm()
+
+    expect(logger.debug).not.toHaveBeenCalled()
+    expect(mockNavigate).not.toHaveBeenCalled()
+  })
+
   const testCases = [
     {
       title: "shows error if last name is missing",

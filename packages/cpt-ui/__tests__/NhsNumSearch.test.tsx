@@ -167,6 +167,12 @@ describe("NhsNumSearch", () => {
     )
   })
 
+  it("does not log when validation fails", async () => {
+    renderWithRouter(<NhsNumSearch />)
+    await userEvent.click(screen.getByTestId("find-patient-button"))
+    expect(logger.debug).not.toHaveBeenCalled()
+  })
+
   it("renders label, hint, and submit button", () => {
     renderWithRouter(<NhsNumSearch />)
     expect(screen.getByText(STRINGS.labelText)).toBeInTheDocument()

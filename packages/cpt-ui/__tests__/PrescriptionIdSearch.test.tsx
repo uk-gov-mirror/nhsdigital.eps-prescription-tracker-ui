@@ -169,6 +169,11 @@ describe("PrescriptionIdSearch", () => {
     )
   })
 
+  it("does not log when validation fails", async () => {
+    await setup("") // Empty input fails validation
+    expect(logger.debug).not.toHaveBeenCalled()
+  })
+
   describe.each([
     ["empty input", "", PRESCRIPTION_ID_SEARCH_STRINGS.errors.empty],
     ["invalid characters only", "12345678901234567!", PRESCRIPTION_ID_SEARCH_STRINGS.errors.chars],
