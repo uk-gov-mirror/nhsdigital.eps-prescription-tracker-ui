@@ -91,7 +91,7 @@ deep-clean: clean
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 
 react-build:
-	export BASE_PATH=/site && npm run build --workspace packages/cpt-ui
+	export BASE_PATH=/site && npm run compile --workspace packages/cpt-ui
 
 react-start:
 	 npm run start --workspace packages/cpt-ui

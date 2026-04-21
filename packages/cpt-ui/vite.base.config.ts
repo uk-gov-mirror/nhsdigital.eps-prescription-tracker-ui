@@ -1,6 +1,6 @@
 import {ServerOptions, UserConfig} from "vite"
 import react from "@vitejs/plugin-react-swc"
-import path from "path"
+import path from "node:path"
 
 export function create(env: Record<string, string>, server?: ServerOptions): UserConfig {
   const envWithProcessPrefix = Object.entries(env).reduce(

@@ -5,6 +5,9 @@ import {create} from "./vite.base.config"
 export default defineConfig(async () => {
   const exports = await getCloudFormationExports()
   const prId = process.env.PULL_REQUEST_ID
+  if (!prId) {
+    throw new Error("please set the pr_id environment variable in your devcontainer")
+  }
   const serviceName = `cpt-ui-pr-${prId}`
   const env = {
     VITE_userPoolId: getCFConfigValue(exports, `${serviceName}:userPool:Id`),
@@ -27,7 +30,7 @@ export default defineConfig(async () => {
     port: 3000,
     proxy: {
       "/api": {
-        target: `https://${serviceName}.dev.eps.national.nhs.uk/ `,
+        target: `https://${serviceName}.dev.eps.national.nhs.uk/`,
         changeOrigin: true,
         secure: false
       }

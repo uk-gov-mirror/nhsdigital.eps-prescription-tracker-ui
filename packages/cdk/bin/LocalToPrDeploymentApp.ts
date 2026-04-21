@@ -4,6 +4,9 @@ import {createAllStacks} from "./CreateAllStacks"
 
 async function main() {
   const prId = process.env.PULL_REQUEST_ID
+  if (!prId) {
+    throw new Error("please set the pr_id environment variable in your devcontainer")
+  }
   const serviceName = `cpt-ui-pr-${prId}`
   process.env.CDK_CONFIG_versionNumber = `PR-${prId}`
   process.env.CDK_CONFIG_commitId = "static-pr"
