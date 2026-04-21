@@ -1,5 +1,8 @@
-export type NhsNumberValidationError = "NHS_NUMBER_REQUIRED" | "NHS_NUMBER_INVALID_LENGTH" |
-"NHS_NUMBER_INVALID_CHARS" | "NHS_NUMBER_INVALID_CHECKSUM"
+export type NhsNumberValidationError =
+  | "NHS_NUMBER_REQUIRED"
+  | "NHS_NUMBER_INVALID_LENGTH"
+  | "NHS_NUMBER_INVALID_CHARS"
+  | "NHS_NUMBER_INVALID_CHECKSUM"
 
 export const normalizeNhsNumber = (input: string): string =>
   input.replace(/\s/g, "")

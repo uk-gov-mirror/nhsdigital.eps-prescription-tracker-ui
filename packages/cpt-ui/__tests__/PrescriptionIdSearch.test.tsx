@@ -150,11 +150,9 @@ describe("PrescriptionIdSearch", () => {
 
   describe.each([
     ["empty input", "", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_REQUIRED],
-    ["invalid characters only", "12345678901234567!",
-      PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHARS],
+    ["invalid characters only (cleaned length remains 18)",
+      "1234-5678-9012-3456!8", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHARS],
     ["invalid length only", "12345678901234567", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_LENGTH],
-    ["invalid characters (with valid length)",
-      "12345678901234567!", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHARS],
     ["invalid characters and length", "12345678901234567890!",
       PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHARS],
     ["invalid format (not matching short-form)",
