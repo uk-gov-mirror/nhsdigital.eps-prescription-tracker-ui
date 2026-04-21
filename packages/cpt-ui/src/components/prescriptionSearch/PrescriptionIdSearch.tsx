@@ -99,8 +99,8 @@ export default function PrescriptionIdSearch() {
         userId: authContext.userDetails?.sub,
         orgName: authContext.selectedRole?.org_name,
         orgCode: authContext.selectedRole?.org_code,
-        searchType: "prescriptionIdSearch",
-        errors: validationErrors,
+        searchType: "prescriptionIDSearch",
+        errors: validationErrors.join(", "),
         errorCount: validationErrors.length
       }, true)
 

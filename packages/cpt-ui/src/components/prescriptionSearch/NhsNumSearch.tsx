@@ -84,7 +84,7 @@ export default function NhsNumSearch() {
         orgName: authContext.selectedRole?.org_name,
         orgCode: authContext.selectedRole?.org_code,
         searchType: "nhsNumberSearch",
-        errors: validationErrors,
+        errors: validationErrors.join(", "),
         errorCount: validationErrors.length
       }, true)
 
