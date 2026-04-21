@@ -167,6 +167,62 @@ describe("NhsNumSearch", () => {
     )
   })
 
+  it("logs user details and org info when available", async () => {
+    const mockNavigate = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(mockNavigate)
+
+    const authStateWithDetails = {
+      ...mockAuthContext,
+      userDetails: {
+        sub: "user-123",
+        email: "user@example.com",
+        name: "Test User",
+        family_name: "User",
+        given_name: "Test"
+      },
+      selectedRole: {
+        org_code: "ORG001",
+        org_name: "Test Organisation",
+        user_id: "user-123",
+        role_id: "ROLE123",
+        users_role_id: "UR123"
+      }
+    }
+
+    const renderWithCustomAuth = (ui: React.ReactElement) =>
+      render(
+        <AuthContext.Provider value={authStateWithDetails}>
+          <SearchContext.Provider value={defaultSearchState}>
+            <MemoryRouter initialEntries={["/search"]}>
+              <NavigationProvider>
+                <Routes>
+                  <Route path="/search" element={ui} />
+                  <Route path="*" element={<div />} />
+                </Routes>
+              </NavigationProvider>
+            </MemoryRouter>
+          </SearchContext.Provider>
+        </AuthContext.Provider>
+      )
+
+    renderWithCustomAuth(<NhsNumSearch />)
+
+    await userEvent.type(screen.getByTestId("nhs-number-input"), "9233739112")
+    await userEvent.click(screen.getByTestId("find-patient-button"))
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      "Search submitted",
+      {
+        sessionId: "test-session-id",
+        userId: "user-123",
+        orgName: "Test Organisation",
+        orgCode: "ORG001",
+        searchType: "NHS Number"
+      },
+      true
+    )
+  })
+
   it("does not log when validation fails", async () => {
     renderWithRouter(<NhsNumSearch />)
     await userEvent.click(screen.getByTestId("find-patient-button"))

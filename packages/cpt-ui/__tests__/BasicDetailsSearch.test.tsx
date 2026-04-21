@@ -176,6 +176,7 @@ const expectFieldHasErrorClass = (testId: string, hasError = true) => {
 describe("BasicDetailsSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
+    jest.clearAllMocks()
     jest.spyOn(logger, "debug").mockImplementation(jest.fn())
   })
   afterEach(() => cleanup())
@@ -214,6 +215,73 @@ describe("BasicDetailsSearch", () => {
           userId: undefined,
           orgName: undefined,
           orgCode: undefined,
+          searchType: "Basic Details"
+        },
+        true
+      )
+    })
+  })
+
+  it("logs user details and org info when available", async () => {
+    const mockNavigate = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(mockNavigate)
+
+    const authStateWithDetails = {
+      ...signedInAuthState,
+      userDetails: {
+        sub: "user-123",
+        email: "user@example.com",
+        name: "Test User",
+        family_name: "User",
+        given_name: "Test"
+      },
+      selectedRole: {
+        org_code: "ORG001",
+        org_name: "Test Organisation",
+        user_id: "user-123",
+        role_id: "ROLE123",
+        users_role_id: "UR123"
+      }
+    }
+
+    const renderWithCustomAuth = (ui: React.ReactElement) =>
+      render(
+        <AuthContext.Provider value={authStateWithDetails}>
+          <SearchContext.Provider value={defaultSearchState}>
+            <MemoryRouter initialEntries={["/search"]}>
+              <NavigationProvider>
+                <Routes>
+                  <Route path="/search" element={ui} />
+                  <Route path="*" element={<LocationDisplay />} />
+                </Routes>
+              </NavigationProvider>
+            </MemoryRouter>
+          </SearchContext.Provider>
+        </AuthContext.Provider>
+      )
+
+    renderWithCustomAuth(<BasicDetailsSearch />)
+
+    const formData = {
+      firstName: "",
+      lastName: "Smith",
+      dobDay: "01",
+      dobMonth: "01",
+      dobYear: "2000",
+      postcode: "LS6 1JL"
+    }
+
+    await fillForm(formData)
+    await submitForm()
+
+    await waitFor(() => {
+      expect(logger.debug).toHaveBeenCalledWith(
+        "Search submitted",
+        {
+          sessionId: "test-session-id",
+          userId: "user-123",
+          orgName: "Test Organisation",
+          orgCode: "ORG001",
           searchType: "Basic Details"
         },
         true

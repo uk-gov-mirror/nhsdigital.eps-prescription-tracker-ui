@@ -169,6 +169,59 @@ describe("PrescriptionIdSearch", () => {
     )
   })
 
+  it("logs user details and org info when available", async () => {
+    const authStateWithDetails = {
+      ...mockAuthContext,
+      userDetails: {
+        sub: "user-123",
+        email: "user@example.com",
+        name: "Test User",
+        family_name: "User",
+        given_name: "Test"
+      },
+      selectedRole: {
+        org_code: "ORG001",
+        org_name: "Test Organisation",
+        user_id: "user-123",
+        role_id: "ROLE123",
+        users_role_id: "UR123"
+      }
+    }
+
+    const renderWithCustomAuth = () =>
+      render(
+        <MemoryRouter initialEntries={["/search"]}>
+          <AuthContext.Provider value={authStateWithDetails}>
+            <SearchContext.Provider value={defaultSearchState}>
+              <NavigationProvider>
+                <Routes>
+                  <Route path="/search" element={<PrescriptionIdSearch />} />
+                  <Route path="*" element={<div />} />
+                </Routes>
+              </NavigationProvider>
+            </SearchContext.Provider>
+          </AuthContext.Provider>
+        </MemoryRouter>
+      )
+
+    renderWithCustomAuth()
+    const inputEl = screen.getByTestId("prescription-id-input")
+    await userEvent.type(inputEl, "c0c757a83008c2d93o")
+    await userEvent.click(screen.getByTestId("find-prescription-button"))
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      "Search submitted",
+      {
+        sessionId: "test-session-id",
+        userId: "user-123",
+        orgName: "Test Organisation",
+        orgCode: "ORG001",
+        searchType: "Prescription ID"
+      },
+      true
+    )
+  })
+
   it("does not log when validation fails", async () => {
     await setup("") // Empty input fails validation
     expect(logger.debug).not.toHaveBeenCalled()
