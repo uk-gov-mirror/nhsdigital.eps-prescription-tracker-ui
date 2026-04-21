@@ -7,7 +7,7 @@ permissions: {}
 
 jobs:
   get_config_values:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@c8f899f30a6a726859b0277faa73cd9ff7f4de20
+    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
     with:
       verify_published_from_main_image: true
     permissions:
@@ -15,8 +15,8 @@ jobs:
       contents: read
       packages: read
   quality_checks:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@c8f899f30a6a726859b0277faa73cd9ff7f4de20
-    needs: [get_config_values]
+    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@8399c1f015c1304e40771cbd8ccc24c7ed48fdbc
+    needs: [ get_config_values ]
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
     permissions:
@@ -27,8 +27,8 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   tag_release:
-    needs: [quality_checks, get_config_values]
-    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@c8f899f30a6a726859b0277faa73cd9ff7f4de20
+    needs: [ quality_checks, get_config_values ]
+    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
     permissions:
       id-token: write
       contents: write
@@ -44,7 +44,7 @@ jobs:
       EXECUTE_JIRA_LAMBDA_ROLE: ${{ secrets.DEV_CLOUD_FORMATION_EXECUTE_LAMBDA_ROLE }}
 
   package_code:
-    needs: [tag_release, get_config_values]
+    needs: [ tag_release, get_config_values ]
     uses: ./.github/workflows/cdk_package_code.yml
     permissions:
       contents: read
@@ -54,7 +54,7 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
 
   release_dev:
-    needs: [tag_release, package_code, get_config_values]
+    needs: [ tag_release, package_code, get_config_values ]
     uses: ./.github/workflows/release_all_stacks.yml
     permissions:
       contents: write
@@ -74,7 +74,7 @@ jobs:
     secrets: inherit
 
   release_ref:
-    needs: [tag_release, package_code, get_config_values, release_dev]
+    needs: [ tag_release, package_code, get_config_values, release_dev ]
     uses: ./.github/workflows/release_all_stacks.yml
     permissions:
       contents: write
@@ -94,7 +94,7 @@ jobs:
     secrets: inherit
 
   release_qa:
-    needs: [tag_release, package_code, get_config_values, release_dev]
+    needs: [ tag_release, package_code, get_config_values, release_dev ]
     uses: ./.github/workflows/release_all_stacks.yml
     permissions:
       contents: write
@@ -113,7 +113,7 @@ jobs:
       IS_PULL_REQUEST: false
     secrets: inherit
   release_int:
-    needs: [tag_release, package_code, get_config_values, release_qa]
+    needs: [ tag_release, package_code, get_config_values, release_qa ]
     uses: ./.github/workflows/release_all_stacks.yml
     permissions:
       contents: write
@@ -133,7 +133,7 @@ jobs:
       IS_PULL_REQUEST: false
     secrets: inherit
   release_prod:
-    needs: [tag_release, package_code, get_config_values, release_int]
+    needs: [ tag_release, package_code, get_config_values, release_int ]
     uses: ./.github/workflows/release_all_stacks.yml
     permissions:
       contents: write

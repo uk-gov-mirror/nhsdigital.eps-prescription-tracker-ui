@@ -4,7 +4,7 @@ rules:
     ignore:
       - cdk_package_code.yml:15:7
       - release_all_stacks.yml:46:7
-      - release_all_stacks.yml:153:7
+      - release_all_stacks.yml:155:7
       - run_regression_tests.yml:27:7
       - pull_request.yml:223:7
   secrets-outside-env:
@@ -15,7 +15,7 @@ rules:
       - run_regression_tests.yml:51:28
   secrets-inherit:
     ignore:
-      - pull_request.yml:172:11
+      - pull_request.yml:157:11
       - release.yml:137:11
       - release.yml:117:11
       - release.yml:98:11
