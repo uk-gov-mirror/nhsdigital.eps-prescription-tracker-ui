@@ -155,7 +155,7 @@ export default function BasicDetailsSearch() {
       return
     }
 
-    logger.info("Search submitted", {
+    logger.debug("Search submitted", {
       sessionId: auth.sessionId,
       userId: auth.userDetails?.sub,
       orgName: auth.selectedRole?.org_name,

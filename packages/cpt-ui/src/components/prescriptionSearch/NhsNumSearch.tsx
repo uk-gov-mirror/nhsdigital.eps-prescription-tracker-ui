@@ -83,7 +83,7 @@ export default function NhsNumSearch() {
     setErrorKey(null)
     const normalized = normalizeNhsNumber(nhsNumber)
 
-    logger.info("Search submitted", {
+    logger.debug("Search submitted", {
       sessionId: auth.sessionId,
       userId: auth.userDetails?.sub,
       orgName: auth.selectedRole?.org_name,

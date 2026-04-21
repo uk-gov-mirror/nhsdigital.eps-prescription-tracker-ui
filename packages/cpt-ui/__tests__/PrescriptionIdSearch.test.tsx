@@ -46,7 +46,8 @@ const mockAuthContext: AuthContextType = {
   selectedRole: undefined,
   userDetails: undefined,
   isConcurrentSession: false,
-  sessionId: undefined,
+  sessionId: "test-session-id",
+  remainingSessionTime: undefined,
   cognitoSignIn: jest.fn(),
   cognitoSignOut: jest.fn(),
   clearAuthState: jest.fn(),
@@ -56,7 +57,10 @@ const mockAuthContext: AuthContextType = {
   updateInvalidSessionCause: jest.fn(),
   isSigningOut: false,
   setIsSigningOut: jest.fn(),
-  remainingSessionTime: undefined
+  setStateForSignOut: jest.fn().mockImplementation(() => Promise.resolve()),
+  setStateForSignIn: jest.fn().mockImplementation(() => Promise.resolve()),
+  setSessionTimeoutModalInfo: jest.fn(),
+  setLogoutModalType: jest.fn()
 }
 
 const mockClearSearchParameters = jest.fn()
@@ -132,7 +136,7 @@ describe("PrescriptionIdSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
     jest.clearAllMocks()
-    jest.spyOn(logger, "info").mockImplementation(jest.fn())
+    jest.spyOn(logger, "debug").mockImplementation(jest.fn())
   })
 
   it("renders label, hint, and button", () => {
@@ -152,7 +156,7 @@ describe("PrescriptionIdSearch", () => {
 
   it("logs a Prescription ID search when the form is submitted", async () => {
     await setup("c0c757a83008c2d93o")
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       "Search submitted",
       {
         sessionId: "test-session-id",

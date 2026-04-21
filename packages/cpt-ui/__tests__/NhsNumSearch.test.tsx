@@ -57,6 +57,7 @@ const mockAuthContext: AuthContextType = {
   userDetails: undefined,
   isConcurrentSession: false,
   sessionId: "test-session-id",
+  remainingSessionTime: undefined,
   cognitoSignIn: jest.fn(),
   cognitoSignOut: jest.fn(),
   clearAuthState: jest.fn(),
@@ -64,12 +65,12 @@ const mockAuthContext: AuthContextType = {
   updateSelectedRole: jest.fn(),
   updateTrackerUserInfo: jest.fn(),
   updateInvalidSessionCause: jest.fn(),
+  isSigningOut: false,
   setIsSigningOut: jest.fn(),
   setStateForSignOut: jest.fn().mockImplementation(() => Promise.resolve()),
   setStateForSignIn: jest.fn().mockImplementation(() => Promise.resolve()),
   setSessionTimeoutModalInfo: jest.fn(),
-  setLogoutModalType: jest.fn(),
-  remainingSessionTime: undefined
+  setLogoutModalType: jest.fn()
 }
 
 const mockClearSearchParameters = jest.fn()
@@ -141,7 +142,7 @@ const renderWithRouter = (ui: React.ReactElement) => {
 describe("NhsNumSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
-    jest.spyOn(logger, "info").mockImplementation(jest.fn())
+    jest.spyOn(logger, "debug").mockImplementation(jest.fn())
   })
 
   it("redirects to prescription list if valid NHS number", async () => {
@@ -153,7 +154,7 @@ describe("NhsNumSearch", () => {
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
     expect(mockNavigate).toHaveBeenCalledWith(FRONTEND_PATHS.PRESCRIPTION_LIST_CURRENT)
-    expect(logger.info).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       "Search submitted",
       {
         sessionId: "test-session-id",

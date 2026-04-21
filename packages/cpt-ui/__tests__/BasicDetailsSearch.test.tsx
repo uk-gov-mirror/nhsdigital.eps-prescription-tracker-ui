@@ -41,11 +41,11 @@ const mockClearAuthState = jest.fn()
 
 const signedInAuthState: AuthContextType = {
   ...mockAuthState,
+  error: null,
+  user: null,
   isSignedIn: true,
   isSigningIn: false,
   invalidSessionCause: undefined,
-  user: "testUser",
-  error: null,
   rolesWithAccess: [],
   rolesWithoutAccess: [],
   selectedRole: undefined,
@@ -61,7 +61,11 @@ const signedInAuthState: AuthContextType = {
   updateTrackerUserInfo: jest.fn(),
   updateInvalidSessionCause: jest.fn(),
   isSigningOut: false,
-  setIsSigningOut: jest.fn()
+  setIsSigningOut: jest.fn(),
+  setStateForSignOut: jest.fn().mockImplementation(() => Promise.resolve()),
+  setStateForSignIn: jest.fn().mockImplementation(() => Promise.resolve()),
+  setSessionTimeoutModalInfo: jest.fn(),
+  setLogoutModalType: jest.fn()
 }
 
 const mockClearSearchParameters = jest.fn()
@@ -172,7 +176,7 @@ const expectFieldHasErrorClass = (testId: string, hasError = true) => {
 describe("BasicDetailsSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
-    jest.spyOn(logger, "info").mockImplementation(jest.fn())
+    jest.spyOn(logger, "debug").mockImplementation(jest.fn())
   })
   afterEach(() => cleanup())
 
@@ -203,7 +207,7 @@ describe("BasicDetailsSearch", () => {
       expect(mockSetDobMonth).toHaveBeenCalledWith(formData.dobMonth)
       expect(mockSetDobYear).toHaveBeenCalledWith(formData.dobYear)
       expect(mockSetPostcode).toHaveBeenCalledWith(formData.postcode)
-      expect(logger.info).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         "Search submitted",
         {
           sessionId: "test-session-id",

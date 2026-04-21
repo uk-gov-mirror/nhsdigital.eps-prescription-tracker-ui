@@ -101,14 +101,13 @@ export default function PrescriptionIdSearch() {
 
     const formatted = normalizePrescriptionId(prescriptionId)
 
-    logger.info("Search submitted", {
+    logger.debug("Search submitted", {
       sessionId: auth.sessionId,
       userId: auth.userDetails?.sub,
       orgName: auth.selectedRole?.org_name,
       orgCode: auth.selectedRole?.org_code,
       searchType: "Prescription ID"
     }, true)
-    // WIP
 
     //clear previous search context
     navigationContext.startNewNavigationSession()
