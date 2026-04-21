@@ -89,10 +89,10 @@ export default function PrescriptionIdSearch() {
   const handlePrescriptionDetails = (e: React.FormEvent) => {
     e.preventDefault()
     const validationErrors = validatePrescriptionId(prescriptionId)
-    const key = getHighestPriorityError(validationErrors)
+    const selectedError = getHighestPriorityError(validationErrors)
 
-    if (key) {
-      setErrorKey(key)
+    if (selectedError) {
+      setErrorKey(selectedError)
 
       logger.debug("Form validation errors", {
         sessionId: authContext.sessionId,
@@ -100,7 +100,8 @@ export default function PrescriptionIdSearch() {
         orgName: authContext.selectedRole?.org_name,
         orgCode: authContext.selectedRole?.org_code,
         searchType: "prescriptionIDSearch",
-        errors: validationErrors
+        errors: validationErrors,
+        errorCount: validationErrors.length
       }, true)
 
       return

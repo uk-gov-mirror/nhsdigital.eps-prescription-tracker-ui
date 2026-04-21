@@ -43,8 +43,6 @@ export default function NhsNumSearch() {
 
   const displayedError = useMemo(() => errorKey ? errorMessages[errorKey] : "", [errorKey])
 
-  // usePageTitle(STRINGS.pageTitle)
-
   usePageTitle(errorKey
     ? STRINGS.pageTitle_ERROR
     : STRINGS.pageTitle)
@@ -74,18 +72,20 @@ export default function NhsNumSearch() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const validationError = validateNhsNumber(nhsNumber)
+    const selectedError = validateNhsNumber(nhsNumber)
 
-    if (validationError) {
-      setErrorKey(validationError)
+    if (selectedError) {
+      setErrorKey(selectedError)
 
+      const validationErrors = [selectedError]
       logger.debug("Form validation errors", {
         sessionId: authContext.sessionId,
         userId: authContext.userDetails?.sub,
         orgName: authContext.selectedRole?.org_name,
         orgCode: authContext.selectedRole?.org_code,
         searchType: "nhsNumberSearch",
-        errors: [validationError]
+        errors: validationErrors,
+        errorCount: validationErrors.length
       }, true)
 
       return
