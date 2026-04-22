@@ -41,11 +41,11 @@ const mockClearAuthState = jest.fn()
 
 const signedInAuthState: AuthContextType = {
   ...mockAuthState,
-  error: null,
-  user: null,
   isSignedIn: true,
   isSigningIn: false,
   invalidSessionCause: undefined,
+  error: null,
+  user: null,
   rolesWithAccess: [],
   rolesWithoutAccess: [],
   selectedRole: undefined,
@@ -176,7 +176,6 @@ const expectFieldHasErrorClass = (testId: string, hasError = true) => {
 describe("BasicDetailsSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
-    jest.clearAllMocks()
     jest.spyOn(logger, "debug").mockImplementation(jest.fn())
   })
   afterEach(() => cleanup())
