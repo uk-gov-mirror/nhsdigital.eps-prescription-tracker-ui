@@ -157,8 +157,8 @@ describe("NhsNumSearch", () => {
 
   it("renders label, hint, and submit button", () => {
     renderWithRouter(<NhsNumSearch />)
-    expect(screen.getByText(STRINGS.labelText)).toBeInTheDocument()
-    expect(screen.getByText(STRINGS.hintText)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.LABEL_TEXT)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.HINT_TEXT)).toBeInTheDocument()
     expect(screen.getByTestId("find-patient-button")).toBeInTheDocument()
   })
 
@@ -174,7 +174,9 @@ describe("NhsNumSearch", () => {
     await userEvent.type(screen.getByTestId("nhs-number-input"), "abc")
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
-    expect(screen.getAllByText("NHS number must have 10 digits").length).toBeGreaterThan(1)
+    // Should show both length and character errors
+    expect(screen.getAllByText("NHS number must be 10 digits").length).toBeGreaterThan(1)
+    expect(screen.getAllByText("NHS number can only contain numbers").length).toBeGreaterThan(1)
   })
 
   it("shows error for short input (123)", async () => {
@@ -182,7 +184,7 @@ describe("NhsNumSearch", () => {
     await userEvent.type(screen.getByTestId("nhs-number-input"), "123")
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
-    expect(screen.getAllByText("NHS number must have 10 digits").length).toBeGreaterThan(1)
+    expect(screen.getAllByText("NHS number must be 10 digits").length).toBeGreaterThan(1)
   })
 
   it("shows error for too long input", async () => {
@@ -190,7 +192,7 @@ describe("NhsNumSearch", () => {
     await userEvent.type(screen.getByTestId("nhs-number-input"), "1234567890000")
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
-    expect(screen.getAllByText("NHS number must have 10 digits").length).toBeGreaterThan(1)
+    expect(screen.getAllByText("NHS number must be 10 digits").length).toBeGreaterThan(1)
   })
 
   it("shows error for 10-digit input with invalid checksum", async () => {
@@ -209,7 +211,7 @@ describe("NhsNumSearch", () => {
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
     expect(
-      screen.getAllByText("Enter an NHS number in the correct format").length
+      screen.getAllByText("NHS number can only contain numbers").length
     ).toBeGreaterThan(1)
   })
 

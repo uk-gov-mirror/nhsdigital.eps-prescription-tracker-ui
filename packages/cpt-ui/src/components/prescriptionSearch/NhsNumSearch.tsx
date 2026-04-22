@@ -36,11 +36,11 @@ export default function NhsNumSearch() {
   const [errors, setErrors] = useState<Array<NhsNumberValidationError>>([])
   const errorRef = useRef<HTMLDivElement | null>(null)
 
-  const errorMessages = STRINGS.errors
+  const errorMessages = STRINGS.ERRORS
 
   usePageTitle(errors.length > 0
-    ? STRINGS.pageTitle_ERROR
-    : STRINGS.pageTitle)
+    ? STRINGS.PAGE_TITLE_ERROR
+    : STRINGS.PAGE_TITLE)
 
   useEffect(() => {
     if (searchContext.nhsNumber && searchContext.searchType === "nhs") {
@@ -109,12 +109,12 @@ export default function NhsNumSearch() {
     <Fragment>
       {errors.length > 0 && (
         <ErrorSummary ref={errorRef} data-testid="error-summary" className="prescription-id-aligned-element">
-          <ErrorSummary.Title>{STRINGS.errorSummaryHeading}</ErrorSummary.Title>
+          <ErrorSummary.Title>{STRINGS.ERROR_SUMMARY_HEADING}</ErrorSummary.Title>
           <ErrorSummary.Body>
             <ErrorSummary.List>
               {errors.map((error) => (
-                <ErrorSummary.Item key={error}>
-                  <a href="#nhs-number-input">{errorMessages[error]}</a>
+                <ErrorSummary.Item key={error} href="#nhs-number-input">
+                  {errorMessages[error]}
                 </ErrorSummary.Item>
               ))}
             </ErrorSummary.List>
@@ -127,12 +127,12 @@ export default function NhsNumSearch() {
             <Label htmlFor="nhs-number-input" id="nhs-number-label" data-testid="nhs-number-label">
               <h2 className="nhsuk-heading-m nhsuk-u-margin-bottom-1 no-outline"
                 data-testid="nhs-number-search-heading">
-                <span className="nhsuk-u-visually-hidden">{STRINGS.hiddenText}</span>
-                {STRINGS.labelText}
+                <span className="nhsuk-u-visually-hidden">{STRINGS.HIDDEN_TEXT}</span>
+                {STRINGS.LABEL_TEXT}
               </h2>
             </Label>
             <HintText id="nhs-number-hint" data-testid="nhs-number-hint">
-              {STRINGS.hintText}
+              {STRINGS.HINT_TEXT}
             </HintText>
 
             {errors.length > 0 && (
@@ -160,7 +160,7 @@ export default function NhsNumSearch() {
           </FormGroup>
 
           <Button type="submit" id="nhs-number-submit" data-testid="find-patient-button">
-            {STRINGS.buttonText}
+            {STRINGS.BUTTON_TEXT}
           </Button>
         </Form>
       </div>

@@ -138,7 +138,7 @@ describe("PrescriptionIdSearch", () => {
     expect(screen.getByTestId("prescription-id-search-heading")).toBeInTheDocument()
     expect(screen.getByTestId("prescription-id-hint")).toBeInTheDocument()
     expect(screen.getByTestId("find-prescription-button")).toHaveTextContent(
-      PRESCRIPTION_ID_SEARCH_STRINGS.buttonText
+      PRESCRIPTION_ID_SEARCH_STRINGS.BUTTON_TEXT
     )
   })
 
@@ -149,15 +149,15 @@ describe("PrescriptionIdSearch", () => {
   })
 
   describe.each([
-    ["empty input", "", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_REQUIRED],
+    ["empty input", "", PRESCRIPTION_ID_SEARCH_STRINGS.ERRORS.PRESCRIPTION_ID_REQUIRED],
     ["invalid characters only (cleaned length remains 18)",
-      "1234-5678-9012-3456!8", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHARS],
-    ["invalid length only", "12345678901234567", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_LENGTH],
+      "1234-5678-9012-3456!8", PRESCRIPTION_ID_SEARCH_STRINGS.ERRORS.PRESCRIPTION_ID_INVALID_CHARS],
+    ["invalid length only", "12345678901234567", PRESCRIPTION_ID_SEARCH_STRINGS.ERRORS.PRESCRIPTION_ID_INVALID_LENGTH],
     ["invalid characters and length", "12345678901234567890!",
-      PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHARS],
+      PRESCRIPTION_ID_SEARCH_STRINGS.ERRORS.PRESCRIPTION_ID_INVALID_CHARS],
     ["invalid format (not matching short-form)",
-      "H0C757X83008C2G93O", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHECKSUM],
-    ["checksum failure", "C0C757A83008C2D93X", PRESCRIPTION_ID_SEARCH_STRINGS.errors.PRESCRIPTION_ID_INVALID_CHECKSUM]
+      "H0C757X83008C2G93O", PRESCRIPTION_ID_SEARCH_STRINGS.ERRORS.PRESCRIPTION_ID_INVALID_CHECKSUM],
+    ["checksum failure", "C0C757A83008C2D93X", PRESCRIPTION_ID_SEARCH_STRINGS.ERRORS.PRESCRIPTION_ID_INVALID_CHECKSUM]
   ])("validation error: %s", (_desc, input, expectedError) => {
     it(`shows "${expectedError}"`, async () => {
       await setup(input)

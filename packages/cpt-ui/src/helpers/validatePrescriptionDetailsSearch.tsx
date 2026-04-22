@@ -7,28 +7,13 @@ export type PrescriptionValidationError =
   | "PRESCRIPTION_ID_INVALID_LENGTH"
   | "PRESCRIPTION_ID_INVALID_CHECKSUM"
 
-// Defines the order of error precedence when multiple issues are present.
-export const PRIORITY_ORDER: Array<PrescriptionValidationError> = [
-  "PRESCRIPTION_ID_REQUIRED",
-  "PRESCRIPTION_ID_INVALID_CHARS",
-  "PRESCRIPTION_ID_INVALID_LENGTH",
-  "PRESCRIPTION_ID_INVALID_CHECKSUM"
-]
-
 // Converts a raw prescription ID string into a normalized format
 export const normalizePrescriptionId = (raw: string): string => {
   const cleaned = raw.replace(/[^a-zA-Z0-9+]/g, "")
   return cleaned.match(/.{1,6}/g)?.join("-").toUpperCase() ?? ""
 }
 
-// Given an array of validation errors, returns the one with the highest priority
-export const getHighestPriorityError = (
-  errors: Array<PrescriptionValidationError>
-): PrescriptionValidationError | null => {
-  return PRIORITY_ORDER.find((key) => errors.includes(key)) ?? null
-}
-
-// Main validation logic for prescription ID input
+// Validates Prescription ID and returns all errors
 export const validatePrescriptionId = (
   rawInput: string
 ): Array<PrescriptionValidationError> => {
