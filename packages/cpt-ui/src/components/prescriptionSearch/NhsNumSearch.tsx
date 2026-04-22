@@ -1,7 +1,6 @@
 import React, {
   Fragment,
   useEffect,
-  useMemo,
   useRef,
   useState
 } from "react"
@@ -34,16 +33,12 @@ export default function NhsNumSearch() {
   const [nhsNumber, setNhsNumber] = useState<string>(
     searchContext.nhsNumber || ""
   )
-  const [errorKey, setErrorKey] = useState<NhsNumberValidationError | null>(
-    null
-  )
+  const [errors, setErrors] = useState<Array<NhsNumberValidationError>>([])
   const errorRef = useRef<HTMLDivElement | null>(null)
 
   const errorMessages = STRINGS.errors
 
-  const displayedError = useMemo(() => errorKey ? errorMessages[errorKey] : "", [errorKey])
-
-  usePageTitle(errorKey
+  usePageTitle(errors.length > 0
     ? STRINGS.pageTitle_ERROR
     : STRINGS.pageTitle)
 
@@ -61,10 +56,10 @@ export default function NhsNumSearch() {
   }, [navigationContext])
 
   useEffect(() => {
-    if (errorKey && errorRef.current) {
+    if (errors.length > 0 && errorRef.current) {
       errorRef.current.focus()
     }
-  }, [errorKey])
+  }, [errors])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNhsNumber(e.target.value)
@@ -72,12 +67,11 @@ export default function NhsNumSearch() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const selectedError = validateNhsNumber(nhsNumber)
+    const validationErrors = validateNhsNumber(nhsNumber)
 
-    if (selectedError) {
-      setErrorKey(selectedError)
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors)
 
-      const validationErrors = [selectedError]
       logger.debug("Form validation errors", {
         sessionId: authContext.sessionId,
         userId: authContext.userDetails?.sub,
@@ -90,7 +84,7 @@ export default function NhsNumSearch() {
 
       return
     }
-    setErrorKey(null)
+    setErrors([])
     const normalized = normalizeNhsNumber(nhsNumber)
 
     // clear any previous search context
@@ -113,21 +107,23 @@ export default function NhsNumSearch() {
 
   return (
     <Fragment>
-      {errorKey && (
+      {errors.length > 0 && (
         <ErrorSummary ref={errorRef} data-testid="error-summary" className="prescription-id-aligned-element">
           <ErrorSummary.Title>{STRINGS.errorSummaryHeading}</ErrorSummary.Title>
           <ErrorSummary.Body>
             <ErrorSummary.List>
-              <ErrorSummary.Item>
-                <a href="#nhs-number-input">{displayedError}</a>
-              </ErrorSummary.Item>
+              {errors.map((error) => (
+                <ErrorSummary.Item key={error}>
+                  <a href="#nhs-number-input">{errorMessages[error]}</a>
+                </ErrorSummary.Item>
+              ))}
             </ErrorSummary.List>
           </ErrorSummary.Body>
         </ErrorSummary>
       )}
       <div className="prescription-id-aligned-element">
         <Form onSubmit={handleSubmit} noValidate data-testid="nhs-number-form">
-          <FormGroup className={errorKey ? "nhsuk-form-group--error" : ""}>
+          <FormGroup className={errors.length > 0 ? "nhsuk-form-group--error" : ""}>
             <Label htmlFor="nhs-number-input" id="nhs-number-label" data-testid="nhs-number-label">
               <h2 className="nhsuk-heading-m nhsuk-u-margin-bottom-1 no-outline"
                 data-testid="nhs-number-search-heading">
@@ -139,9 +135,14 @@ export default function NhsNumSearch() {
               {STRINGS.hintText}
             </HintText>
 
-            {errorKey && (
-              <ErrorMessage id="nhs-number-error" data-testid={`error-message-${errorKey}`}>
-                {displayedError}
+            {errors.length > 0 && (
+              <ErrorMessage id="nhs-number-error" data-testid="error-message-multiple">
+                {errors.map((error, index) => (
+                  <div key={error}>
+                    {errorMessages[error]}
+                    {index < errors.length - 1 && <br />}
+                  </div>
+                ))}
               </ErrorMessage>
             )}
 
@@ -151,8 +152,8 @@ export default function NhsNumSearch() {
               value={nhsNumber}
               onChange={handleChange}
               autoComplete="off"
-              className={`nhsuk-input--width-10 ${errorKey ? "nhsuk-input--error" : ""}`}
-              aria-describedby={errorKey ? "nhs-number-hint nhs-number-error" : "nhs-number-hint"}
+              className={`nhsuk-input--width-10 ${errors.length > 0 ? "nhsuk-input--error" : ""}`}
+              aria-describedby={errors.length > 0 ? "nhs-number-hint nhs-number-error" : "nhs-number-hint"}
               aria-labelledby="nhs-number-label"
               data-testid="nhs-number-input"
             />
