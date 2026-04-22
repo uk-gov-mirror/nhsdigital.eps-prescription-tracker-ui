@@ -14,7 +14,7 @@ rules:
       - run_regression_tests.yml:51:28
   secrets-inherit:
     ignore:
-      - pull_request.yml:219:11
+      - pull_request.yml:196:11
       - release.yml:232:11
       - release.yml:195:11
       - release.yml:154:11
