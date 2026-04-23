@@ -123,7 +123,8 @@ export const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({
 }) => {
   const liveRegionRef = useRef<HTMLSpanElement>(null)
   const auth = useAuth()
-  const [, forceUpdate] = useState({})
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_, forceUpdate] = useState(0)
   const location = useLocation()
   const path = normalizePath(location.pathname)
   const isSessionSelectionPath = (path === FRONTEND_PATHS.SESSION_SELECTION)
@@ -166,7 +167,7 @@ export const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({
         // Start countdown that recalculates every second
         countdownTimerRef.current = setInterval(() => {
           // Force component re-render to update displayed time
-          forceUpdate({})
+          forceUpdate(prev => prev + 1)
 
           // Calculate current remaining time
           const currentTimeLeft = calculateRemainingTime(sessionEndTime)

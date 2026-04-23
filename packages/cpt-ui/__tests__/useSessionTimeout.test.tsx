@@ -227,7 +227,7 @@ describe("useSessionTimeout", () => {
 
       // Check that the final call resets the action and buttonDisabled
       const calls = mockSetSessionTimeoutModalInfo.mock.calls
-      const finalCall = calls[calls.length - 1][0]
+      const finalCall = calls.at(-1)?.[0]
       const finalState = finalCall({
         showModal: false, sessionEndTime: null, action: "extending", buttonDisabled: true
       })
