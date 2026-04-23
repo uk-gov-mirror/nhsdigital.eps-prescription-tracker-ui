@@ -193,7 +193,7 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
     }
   }
 
-  const handleSessionTimeout = (remainingSeconds: number) => {
+  const handleSessionTimeout = (remainingSeconds: number, remainingTime: number) => {
     const twoMinutes = 2 * 60 // 2 minutes in seconds
     const currentPath = normalizePath(location.pathname)
 
@@ -204,6 +204,7 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
 
       // Show timeout modal when 2 minutes or less remaining
       logger.info("Session timeout warning triggered - showing modal", {
+        remainingTime,
         remainingSeconds
       })
       auth.setLogoutModalType("timeout")
@@ -219,7 +220,9 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
       handleSignoutEvent(auth, navigate, "Timeout")
     } else {
       // Session still valid, ensure modal is hidden and update time info
-      logger.debug("Session still valid - hiding modal if shown")
+      logger.debug("Session still valid - hiding modal if shown", {
+        remainingTime
+      })
       auth.setSessionTimeoutModalInfo({
         showModal: false,
         sessionEndTime: null,
@@ -239,8 +242,8 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
     const remainingTime = response.remainingSessionTime
     const remainingSeconds = remainingTime !== undefined ? Math.floor(remainingTime / 1000) : undefined
 
-    if (remainingSeconds !== undefined) {
-      handleSessionTimeout(remainingSeconds)
+    if (remainingSeconds !== undefined && remainingTime !== undefined) {
+      handleSessionTimeout(remainingSeconds, remainingTime)
     } else {
       // No remaining session time info available - this indicates a session integrity issue
       logger.warn("No remainingSessionTime in response - session may be corrupted, logging out user")
