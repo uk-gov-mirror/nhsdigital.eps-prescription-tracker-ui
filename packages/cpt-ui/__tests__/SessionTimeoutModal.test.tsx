@@ -140,7 +140,7 @@ describe("SessionTimeoutModal", () => {
     })
 
     it("displays the correct time left", () => {
-      render(<SessionTimeoutModal {...defaultProps} sessionEndTime={Date.now() + (45 * 1000)} />)
+      renderWithRouter(<SessionTimeoutModal {...defaultProps} sessionEndTime={Date.now() + (45 * 1000)} />)
       expect(screen.getByText("For your security, we will log you out in:", {exact: false})).toBeInTheDocument()
       expect(screen.getByText("45")).toBeInTheDocument()
     })

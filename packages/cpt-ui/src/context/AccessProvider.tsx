@@ -214,10 +214,10 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
             const twoMinutes = 2 * 60 // 2 minutes in seconds
 
             if (remainingSeconds <= twoMinutes && remainingSeconds > 0) {
-              // const currentPath = normalizePath(location.pathname)
-              // if (currentPath === FRONTEND_PATHS.SELECT_YOUR_ROLE) {
-              //   return
-              // }
+              const currentPath = normalizePath(location.pathname)
+              if (currentPath === FRONTEND_PATHS.SELECT_YOUR_ROLE) {
+                return
+              }
 
               // Show timeout modal when 2 minutes or less remaining
               logger.info("Session timeout warning triggered - showing modal", {
