@@ -1,29 +1,17 @@
 name: deploy_pr
-
 on:
   pull_request:
     branches: [main]
-
 permissions: {}
-
 jobs:
   get_config_values:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@c8f899f30a6a726859b0277faa73cd9ff7f4de20
+    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
     with:
       verify_published_from_main_image: false
     permissions:
       attestations: read
       contents: read
       packages: read
-  dependabot-auto-approve-and-merge:
-    needs: quality_checks
-    uses: NHSDigital/eps-common-workflows/.github/workflows/dependabot-auto-approve-and-merge.yml@c8f899f30a6a726859b0277faa73cd9ff7f4de20
-    permissions:
-      contents: write
-      pull-requests: write
-    secrets:
-      AUTOMERGE_APP_ID: ${{ secrets.AUTOMERGE_APP_ID }}
-      AUTOMERGE_PEM: ${{ secrets.AUTOMERGE_PEM }}
   get_commit_message:
     runs-on: ubuntu-22.04
     permissions:
@@ -41,11 +29,10 @@ jobs:
         id: commit_message
         run: |
           echo "commit_message=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
-
   quality_checks:
     # always run, but only block in the non-skip case
     needs: [get_commit_message, get_config_values]
-    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@c8f899f30a6a726859b0277faa73cd9ff7f4de20
+    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@8399c1f015c1304e40771cbd8ccc24c7ed48fdbc
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
     permissions:
@@ -54,7 +41,6 @@ jobs:
       packages: read
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   quality_gate:
     needs: get_commit_message
     runs-on: ubuntu-22.04
@@ -62,7 +48,7 @@ jobs:
     steps:
       - name: Wait for quality checks to succeed
         if: ${{ ! contains(needs.get_commit_message.outputs.commit_message, '#skip-qc') }}
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: json
@@ -134,23 +120,19 @@ jobs:
                 return;
               }
             }
-
       - name: Bypass QC gate
         if: ${{ contains(needs.get_commit_message.outputs.commit_message, '#skip-qc') }}
         run: echo "Skipping QC gate per commit message."
-
   pr_title_format_check:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/pr_title_check.yml@c8f899f30a6a726859b0277faa73cd9ff7f4de20
+    uses: NHSDigital/eps-common-workflows/.github/workflows/pr_title_check.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
     permissions:
       pull-requests: write
-
   get_issue_number:
     runs-on: ubuntu-22.04
     outputs:
       issue_number: ${{steps.get_issue_number.outputs.result}}
-
     steps:
-      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         name: get issue number
         id: get_issue_number
         with:
@@ -169,10 +151,9 @@ jobs:
               ).data[0].number;
             }
           result-encoding: string
-
   tag_release:
     needs: [get_config_values]
-    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@c8f899f30a6a726859b0277faa73cd9ff7f4de20
+    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
     permissions:
       id-token: write
       contents: write
@@ -182,7 +163,6 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       branch_name: ${{ github.event.pull_request.head.ref }}
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
-
   get_commit_id:
     runs-on: ubuntu-22.04
     outputs:
@@ -192,7 +172,6 @@ jobs:
         id: commit_id
         run: |
           echo "commit_id=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-
   package_code:
     needs: [get_issue_number, get_commit_id, quality_gate, get_config_values]
     permissions:
@@ -208,8 +187,6 @@ jobs:
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-
-
   release_code:
     needs: [get_issue_number, package_code, get_commit_id, get_config_values]
     if: |
