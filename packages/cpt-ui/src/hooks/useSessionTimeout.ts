@@ -66,8 +66,6 @@ export const useSessionTimeout = () => {
       }
     } catch (error) {
       logger.error("Error extending session:", error)
-      // Hide modal and clear timer, then proceed to logout
-      auth.setLogoutModalType(undefined)
       auth.setSessionTimeoutModalInfo(prev => ({
         ...prev,
         showModal: false,
