@@ -27,7 +27,7 @@ import {
   PrescriptionValidationError
 } from "@/helpers/validatePrescriptionDetailsSearch"
 import {useAuth} from "@/context/AuthProvider"
-import {logger} from "@/helpers/logger"
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {usePageTitle} from "@/hooks/usePageTitle"
@@ -101,13 +101,7 @@ export default function PrescriptionIdSearch() {
 
     const formatted = normalizePrescriptionId(prescriptionId)
 
-    logger.debug("Search submitted", {
-      sessionId: auth.sessionId,
-      userId: auth.userDetails?.sub,
-      orgName: auth.selectedRole?.org_name,
-      orgCode: auth.selectedRole?.org_code,
-      searchType: "Prescription ID"
-    }, true)
+    logSearchSubmitted(auth, "Prescription ID")
 
     //clear previous search context
     navigationContext.startNewNavigationSession()

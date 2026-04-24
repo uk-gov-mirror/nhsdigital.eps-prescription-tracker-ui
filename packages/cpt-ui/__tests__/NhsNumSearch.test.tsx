@@ -10,7 +10,7 @@ import {
   Route
 } from "react-router-dom"
 
-import {logger} from "@/helpers/logger"
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import NhsNumSearch from "@/components/prescriptionSearch/NhsNumSearch"
 import {STRINGS} from "@/constants/ui-strings/NhsNumSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
@@ -29,6 +29,10 @@ const mockNavigationContext = {
   getRelevantSearchParameters: jest.fn(),
   startNewNavigationSession: jest.fn()
 }
+
+jest.mock("@/helpers/searchLogging", () => ({
+  logSearchSubmitted: jest.fn()
+}))
 
 jest.mock("@/context/NavigationProvider", () => ({
   ...jest.requireActual("@/context/NavigationProvider"),
@@ -142,7 +146,6 @@ const renderWithRouter = (ui: React.ReactElement) => {
 describe("NhsNumSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
-    jest.spyOn(logger, "debug").mockImplementation(jest.fn())
   })
 
   it("redirects to prescription list if valid NHS number", async () => {
@@ -154,16 +157,9 @@ describe("NhsNumSearch", () => {
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
     expect(mockNavigate).toHaveBeenCalledWith(FRONTEND_PATHS.PRESCRIPTION_LIST_CURRENT)
-    expect(logger.debug).toHaveBeenCalledWith(
-      "Search submitted",
-      {
-        sessionId: "test-session-id",
-        userId: undefined,
-        orgName: undefined,
-        orgCode: undefined,
-        searchType: "NHS Number"
-      },
-      true
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "NHS Number"
     )
   })
 
@@ -210,23 +206,20 @@ describe("NhsNumSearch", () => {
     await userEvent.type(screen.getByTestId("nhs-number-input"), "9233739112")
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
-    expect(logger.debug).toHaveBeenCalledWith(
-      "Search submitted",
-      {
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({
         sessionId: "test-session-id",
-        userId: "user-123",
-        orgName: "Test Organisation",
-        orgCode: "ORG001",
-        searchType: "NHS Number"
-      },
-      true
+        userDetails: expect.objectContaining({sub: "user-123"}),
+        selectedRole: expect.objectContaining({org_code: "ORG001", org_name: "Test Organisation"})
+      }),
+      "NHS Number"
     )
   })
 
   it("does not log when validation fails", async () => {
     renderWithRouter(<NhsNumSearch />)
     await userEvent.click(screen.getByTestId("find-patient-button"))
-    expect(logger.debug).not.toHaveBeenCalled()
+    expect(logSearchSubmitted).not.toHaveBeenCalled()
   })
 
   it("renders label, hint, and submit button", () => {

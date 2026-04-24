@@ -15,7 +15,7 @@ import {
   Route
 } from "react-router-dom"
 
-import {logger} from "@/helpers/logger"
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import BasicDetailsSearch from "@/components/prescriptionSearch/BasicDetailsSearch"
 import {BasicDetailsSearchType} from "@cpt-ui-common/common-types"
 import {STRINGS} from "@/constants/ui-strings/BasicDetailsSearchStrings"
@@ -24,6 +24,10 @@ import {AuthContext, AuthContextType} from "@/context/AuthProvider"
 import {SearchContext, SearchProviderContextType} from "@/context/SearchProvider"
 import {NavigationProvider} from "@/context/NavigationProvider"
 import {mockAuthState} from "./mocks/AuthStateMock"
+
+jest.mock("@/helpers/searchLogging", () => ({
+  logSearchSubmitted: jest.fn()
+}))
 
 jest.mock("react-router-dom", () => {
   const actual = jest.requireActual("react-router-dom")
@@ -176,7 +180,6 @@ const expectFieldHasErrorClass = (testId: string, hasError = true) => {
 describe("BasicDetailsSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
-    jest.spyOn(logger, "debug").mockImplementation(jest.fn())
   })
   afterEach(() => cleanup())
 
@@ -207,16 +210,9 @@ describe("BasicDetailsSearch", () => {
       expect(mockSetDobMonth).toHaveBeenCalledWith(formData.dobMonth)
       expect(mockSetDobYear).toHaveBeenCalledWith(formData.dobYear)
       expect(mockSetPostcode).toHaveBeenCalledWith(formData.postcode)
-      expect(logger.debug).toHaveBeenCalledWith(
-        "Search submitted",
-        {
-          sessionId: "test-session-id",
-          userId: undefined,
-          orgName: undefined,
-          orgCode: undefined,
-          searchType: "Basic Details"
-        },
-        true
+      expect(logSearchSubmitted).toHaveBeenCalledWith(
+        expect.objectContaining({sessionId: "test-session-id"}),
+        "Basic Details"
       )
     })
   })
@@ -274,16 +270,13 @@ describe("BasicDetailsSearch", () => {
     await submitForm()
 
     await waitFor(() => {
-      expect(logger.debug).toHaveBeenCalledWith(
-        "Search submitted",
-        {
+      expect(logSearchSubmitted).toHaveBeenCalledWith(
+        expect.objectContaining({
           sessionId: "test-session-id",
-          userId: "user-123",
-          orgName: "Test Organisation",
-          orgCode: "ORG001",
-          searchType: "Basic Details"
-        },
-        true
+          userDetails: expect.objectContaining({sub: "user-123"}),
+          selectedRole: expect.objectContaining({org_code: "ORG001", org_name: "Test Organisation"})
+        }),
+        "Basic Details"
       )
     })
   })
@@ -297,7 +290,7 @@ describe("BasicDetailsSearch", () => {
     // Submit form with missing required fields
     await submitForm()
 
-    expect(logger.debug).not.toHaveBeenCalled()
+    expect(logSearchSubmitted).not.toHaveBeenCalled()
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 

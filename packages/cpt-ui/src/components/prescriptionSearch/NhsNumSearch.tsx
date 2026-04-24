@@ -19,7 +19,7 @@ import {
 
 import {STRINGS} from "@/constants/ui-strings/NhsNumSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
-import {logger} from "@/helpers/logger"
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import {useAuth} from "@/context/AuthProvider"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
@@ -83,13 +83,7 @@ export default function NhsNumSearch() {
     setErrorKey(null)
     const normalized = normalizeNhsNumber(nhsNumber)
 
-    logger.debug("Search submitted", {
-      sessionId: auth.sessionId,
-      userId: auth.userDetails?.sub,
-      orgName: auth.selectedRole?.org_name,
-      orgCode: auth.selectedRole?.org_code,
-      searchType: "NHS Number"
-    }, true)
+    logSearchSubmitted(auth, "NHS Number")
 
     // clear any previous search context
     navigationContext.startNewNavigationSession()

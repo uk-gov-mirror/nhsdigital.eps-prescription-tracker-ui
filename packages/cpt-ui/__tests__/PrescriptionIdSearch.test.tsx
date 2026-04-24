@@ -10,7 +10,7 @@ import {
 } from "react-router-dom"
 
 import {FRONTEND_PATHS} from "@/constants/environment"
-import {logger} from "@/helpers/logger"
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import PrescriptionIdSearch from "@/components/prescriptionSearch/PrescriptionIdSearch"
 import {PRESCRIPTION_ID_SEARCH_STRINGS} from "@/constants/ui-strings/SearchForAPrescriptionStrings"
 import {AuthContext, AuthContextType} from "@/context/AuthProvider"
@@ -28,6 +28,10 @@ const mockNavigationContext = {
   getRelevantSearchParameters: jest.fn(),
   startNewNavigationSession: jest.fn()
 }
+
+jest.mock("@/helpers/searchLogging", () => ({
+  logSearchSubmitted: jest.fn()
+}))
 
 jest.mock("@/context/NavigationProvider", () => ({
   ...jest.requireActual("@/context/NavigationProvider"),
@@ -136,7 +140,6 @@ describe("PrescriptionIdSearch", () => {
   beforeEach(() => {
     jest.resetAllMocks()
     jest.clearAllMocks()
-    jest.spyOn(logger, "debug").mockImplementation(jest.fn())
   })
 
   it("renders label, hint, and button", () => {
@@ -156,16 +159,9 @@ describe("PrescriptionIdSearch", () => {
 
   it("logs a Prescription ID search when the form is submitted", async () => {
     await setup("c0c757a83008c2d93o")
-    expect(logger.debug).toHaveBeenCalledWith(
-      "Search submitted",
-      {
-        sessionId: "test-session-id",
-        userId: undefined,
-        orgName: undefined,
-        orgCode: undefined,
-        searchType: "Prescription ID"
-      },
-      true
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "Prescription ID"
     )
   })
 
@@ -209,22 +205,19 @@ describe("PrescriptionIdSearch", () => {
     await userEvent.type(inputEl, "c0c757a83008c2d93o")
     await userEvent.click(screen.getByTestId("find-prescription-button"))
 
-    expect(logger.debug).toHaveBeenCalledWith(
-      "Search submitted",
-      {
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({
         sessionId: "test-session-id",
-        userId: "user-123",
-        orgName: "Test Organisation",
-        orgCode: "ORG001",
-        searchType: "Prescription ID"
-      },
-      true
+        userDetails: expect.objectContaining({sub: "user-123"}),
+        selectedRole: expect.objectContaining({org_code: "ORG001", org_name: "Test Organisation"})
+      }),
+      "Prescription ID"
     )
   })
 
   it("does not log when validation fails", async () => {
     await setup("") // Empty input fails validation
-    expect(logger.debug).not.toHaveBeenCalled()
+    expect(logSearchSubmitted).not.toHaveBeenCalled()
   })
 
   describe.each([
