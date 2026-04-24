@@ -13,8 +13,10 @@ import {
 import NhsNumSearch from "@/components/prescriptionSearch/NhsNumSearch"
 import {STRINGS} from "@/constants/ui-strings/NhsNumSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
+import {AuthContext, AuthContextType} from "@/context/AuthProvider"
 import {SearchContext, SearchProviderContextType} from "@/context/SearchProvider"
 import {NavigationProvider} from "@/context/NavigationProvider"
+import {mockAuthState} from "./mocks/AuthStateMock"
 
 const mockNavigationContext = {
   pushNavigation: jest.fn(),
@@ -40,6 +42,36 @@ jest.mock("react-router-dom", () => {
     useNavigate: jest.fn()
   }
 })
+
+// Mock auth context
+const mockCognitoSignIn = jest.fn()
+const mockCognitoSignOut = jest.fn()
+const mockClearAuthState = jest.fn()
+
+const signedInAuthState: AuthContextType = {
+  ...mockAuthState,
+  isSignedIn: true,
+  isSigningIn: false,
+  invalidSessionCause: undefined,
+  user: "testUser",
+  error: null,
+  rolesWithAccess: [],
+  rolesWithoutAccess: [],
+  selectedRole: undefined,
+  userDetails: undefined,
+  isConcurrentSession: false,
+  sessionId: "test-session-id",
+  remainingSessionTime: undefined,
+  cognitoSignIn: mockCognitoSignIn,
+  cognitoSignOut: mockCognitoSignOut,
+  clearAuthState: mockClearAuthState,
+  hasSingleRoleAccess: jest.fn().mockReturnValue(false),
+  updateSelectedRole: jest.fn(),
+  updateTrackerUserInfo: jest.fn(),
+  updateInvalidSessionCause: jest.fn(),
+  isSigningOut: false,
+  setIsSigningOut: jest.fn()
+}
 
 const mockClearSearchParameters = jest.fn()
 const mockSetPrescriptionId = jest.fn()
@@ -92,16 +124,18 @@ const LocationDisplay = () => {
 
 const renderWithRouter = (ui: React.ReactElement) => {
   return render(
-    <SearchContext.Provider value={defaultSearchState}>
-      <MemoryRouter initialEntries={["/search"]}>
-        <NavigationProvider>
-          <Routes>
-            <Route path="/search" element={ui} />
-            <Route path="*" element={<LocationDisplay />} />
-          </Routes>
-        </NavigationProvider>
-      </MemoryRouter>
-    </SearchContext.Provider>
+    <AuthContext.Provider value={signedInAuthState}>
+      <SearchContext.Provider value={defaultSearchState}>
+        <MemoryRouter initialEntries={["/search"]}>
+          <NavigationProvider>
+            <Routes>
+              <Route path="/search" element={ui} />
+              <Route path="*" element={<LocationDisplay />} />
+            </Routes>
+          </NavigationProvider>
+        </MemoryRouter>
+      </SearchContext.Provider>
+    </AuthContext.Provider>
   )
 }
 
@@ -123,8 +157,8 @@ describe("NhsNumSearch", () => {
 
   it("renders label, hint, and submit button", () => {
     renderWithRouter(<NhsNumSearch />)
-    expect(screen.getByText(STRINGS.labelText)).toBeInTheDocument()
-    expect(screen.getByText(STRINGS.hintText)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.LABEL_TEXT)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.HINT_TEXT)).toBeInTheDocument()
     expect(screen.getByTestId("find-patient-button")).toBeInTheDocument()
   })
 
@@ -140,7 +174,9 @@ describe("NhsNumSearch", () => {
     await userEvent.type(screen.getByTestId("nhs-number-input"), "abc")
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
-    expect(screen.getAllByText("NHS number must have 10 digits").length).toBeGreaterThan(1)
+    // Should show both length and character errors
+    expect(screen.getAllByText("NHS number must be 10 digits").length).toBeGreaterThan(1)
+    expect(screen.getAllByText("NHS number can only contain numbers").length).toBeGreaterThan(1)
   })
 
   it("shows error for short input (123)", async () => {
@@ -148,7 +184,7 @@ describe("NhsNumSearch", () => {
     await userEvent.type(screen.getByTestId("nhs-number-input"), "123")
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
-    expect(screen.getAllByText("NHS number must have 10 digits").length).toBeGreaterThan(1)
+    expect(screen.getAllByText("NHS number must be 10 digits").length).toBeGreaterThan(1)
   })
 
   it("shows error for too long input", async () => {
@@ -156,7 +192,7 @@ describe("NhsNumSearch", () => {
     await userEvent.type(screen.getByTestId("nhs-number-input"), "1234567890000")
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
-    expect(screen.getAllByText("NHS number must have 10 digits").length).toBeGreaterThan(1)
+    expect(screen.getAllByText("NHS number must be 10 digits").length).toBeGreaterThan(1)
   })
 
   it("shows error for 10-digit input with invalid checksum", async () => {
@@ -175,7 +211,7 @@ describe("NhsNumSearch", () => {
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
     expect(
-      screen.getAllByText("Enter an NHS number in the correct format").length
+      screen.getAllByText("NHS number can only contain numbers").length
     ).toBeGreaterThan(1)
   })
 
