@@ -17,7 +17,7 @@ import {
 import {DoHSData} from "../src/utils/types"
 
 import {mergePrescriptionDetails} from "../src/utils/responseMapper"
-import {PrescriptionOdsCodes} from "src/utils/extensionUtils"
+import {PrescriptionOdsCodes} from "../src/utils/extensionUtils"
 
 describe("mergePrescriptionDetails", () => {
   const participantExtensionUrl =
