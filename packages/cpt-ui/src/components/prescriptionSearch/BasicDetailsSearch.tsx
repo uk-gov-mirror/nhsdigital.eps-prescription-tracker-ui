@@ -26,10 +26,13 @@ import {useAuth} from "@/context/AuthProvider"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {usePageTitle} from "@/hooks/usePageTitle"
+import {logger} from "@/helpers/logger"
+import {useAuth} from "@/context/AuthProvider"
 
 export default function BasicDetailsSearch() {
   const navigate = useNavigate()
   const errorRef = useRef<HTMLDivElement | null>(null)
+  const authContext = useAuth()
 
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -113,7 +116,7 @@ export default function BasicDetailsSearch() {
     e.preventDefault()
 
     // Run validation and collect any error keys
-    const newErrors = validateBasicDetails({
+    const validationErrors = validateBasicDetails({
       firstName,
       lastName,
       dobDay,
@@ -124,8 +127,18 @@ export default function BasicDetailsSearch() {
 
     // If validation fails, store errors and highlight relevant DOB fields.
     // DOB field highlights are preserved until the next form submission.
-    if (newErrors.length > 0) {
-      setErrors(newErrors)
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors)
+
+      logger.debug("Form validation errors", {
+        sessionId: authContext.sessionId,
+        userId: authContext.userDetails?.sub,
+        orgName: authContext.selectedRole?.org_name,
+        orgCode: authContext.selectedRole?.org_code,
+        searchType: "basicDetailsSearch",
+        errors: validationErrors.join(", "),
+        errorCount: validationErrors.length
+      }, true)
 
       const dobErrorKeys = new Set([
         "DOB_REQUIRED",
@@ -140,7 +153,7 @@ export default function BasicDetailsSearch() {
         "DOB_FUTURE_DATE"
       ])
 
-      const hasDobRelatedError = newErrors.some((error) =>
+      const hasDobRelatedError = validationErrors.some((error) =>
         dobErrorKeys.has(error)
       )
 
