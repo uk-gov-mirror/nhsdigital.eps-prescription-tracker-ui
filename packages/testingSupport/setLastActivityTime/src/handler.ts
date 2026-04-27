@@ -47,6 +47,7 @@ const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPro
 
     logger.info("Setting lastActivityTime to 13 minutes in the Past for user", {username, requestId})
 
+    // WIP
     const thirteenMinutesInPast = Date.now() - (13 * 60 * 1000)
 
     const existingTokenMapping = await getTokenMapping(
