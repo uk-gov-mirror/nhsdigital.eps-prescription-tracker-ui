@@ -1,4 +1,8 @@
-export type NhsNumberValidationError = "empty" | "length" | "chars" | "noMatch"
+export type NhsNumberValidationError =
+  | "NHS_NUMBER_REQUIRED"
+  | "NHS_NUMBER_INVALID_LENGTH"
+  | "NHS_NUMBER_INVALID_CHARS"
+  | "NHS_NUMBER_INVALID_CHECKSUM"
 
 export const normalizeNhsNumber = (input: string): string =>
   input.replace(/\s/g, "")
@@ -21,15 +25,32 @@ export const isValidNhsNumber = (nhsNumber: string): boolean => {
   return checkDigit !== 10 && checkDigit === digits[9]
 }
 
+/**
+ * Validates NHS number and returns all applicable errors.
+ */
 export const validateNhsNumber = (
   rawInput: string
-): NhsNumberValidationError | null => {
+): Array<NhsNumberValidationError> => {
+  const errors: Array<NhsNumberValidationError> = []
   const cleaned = normalizeNhsNumber(rawInput)
 
-  if (!cleaned) return "empty"
-  if (cleaned.length !== 10) return "length"
-  if (!/^\d+$/.test(cleaned)) return "chars"
-  if (!isValidNhsNumber(cleaned)) return "noMatch"
+  if (!cleaned) {
+    errors.push("NHS_NUMBER_REQUIRED")
+    return errors
+  }
 
-  return null
+  if (cleaned.length !== 10) {
+    errors.push("NHS_NUMBER_INVALID_LENGTH")
+  }
+
+  if (!/^\d+$/.test(cleaned)) {
+    errors.push("NHS_NUMBER_INVALID_CHARS")
+  }
+
+  // Only check checksum if the input is exactly 10 digits
+  if (cleaned.length === 10 && /^\d+$/.test(cleaned) && !isValidNhsNumber(cleaned)) {
+    errors.push("NHS_NUMBER_INVALID_CHECKSUM")
+  }
+
+  return errors
 }
