@@ -48,8 +48,8 @@ const signedInAuthState: AuthContextType = {
   isSignedIn: true,
   isSigningIn: false,
   invalidSessionCause: undefined,
-  error: "testUser",
-  user: null,
+  user: "testUser",
+  error: null,
   rolesWithAccess: [],
   rolesWithoutAccess: [],
   selectedRole: undefined,
@@ -174,9 +174,7 @@ const expectFieldHasErrorClass = (testId: string, hasError = true) => {
 }
 
 describe("BasicDetailsSearch", () => {
-  beforeEach(() => {
-    jest.resetAllMocks()
-  })
+  beforeEach(() => jest.resetAllMocks())
   afterEach(() => cleanup())
 
   it("redirects to the patient search results page", async () => {
