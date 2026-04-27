@@ -11,9 +11,9 @@
     "global.d.ts"
   ],
   "compilerOptions": {
-    "baseUrl": ".",
+    
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "lib": ["dom", "dom.iterable", "esnext"],
     "noEmit": true,
