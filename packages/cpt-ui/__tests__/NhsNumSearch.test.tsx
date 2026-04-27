@@ -48,13 +48,18 @@ jest.mock("react-router-dom", () => {
   }
 })
 
-const mockAuthContext: AuthContextType = {
+// Mock auth context
+const mockCognitoSignIn = jest.fn()
+const mockCognitoSignOut = jest.fn()
+const mockClearAuthState = jest.fn()
+
+const signedInAuthState: AuthContextType = {
   ...mockAuthState,
-  error: null,
-  user: null,
   isSignedIn: true,
   isSigningIn: false,
   invalidSessionCause: undefined,
+  user: "testUser",
+  error: null,
   rolesWithAccess: [],
   rolesWithoutAccess: [],
   selectedRole: undefined,
@@ -70,11 +75,7 @@ const mockAuthContext: AuthContextType = {
   updateTrackerUserInfo: jest.fn(),
   updateInvalidSessionCause: jest.fn(),
   isSigningOut: false,
-  setIsSigningOut: jest.fn(),
-  setStateForSignOut: jest.fn().mockImplementation(() => Promise.resolve()),
-  setStateForSignIn: jest.fn().mockImplementation(() => Promise.resolve()),
-  setSessionTimeoutModalInfo: jest.fn(),
-  setLogoutModalType: jest.fn()
+  setIsSigningOut: jest.fn()
 }
 
 const mockClearSearchParameters = jest.fn()
@@ -128,7 +129,7 @@ const LocationDisplay = () => {
 
 const renderWithRouter = (ui: React.ReactElement) => {
   return render(
-    <AuthContext.Provider value={mockAuthContext}>
+    <AuthContext.Provider value={signedInAuthState}>
       <SearchContext.Provider value={defaultSearchState}>
         <MemoryRouter initialEntries={["/search"]}>
           <NavigationProvider>
@@ -168,7 +169,7 @@ describe("NhsNumSearch", () => {
     (useNavigate as jest.Mock).mockReturnValue(mockNavigate)
 
     const authStateWithDetails = {
-      ...mockAuthContext,
+      ...signedInAuthState,
       userDetails: {
         sub: "user-123",
         email: "user@example.com",
@@ -216,10 +217,14 @@ describe("NhsNumSearch", () => {
     )
   })
 
-  it("does not log when validation fails", async () => {
+  // We expect it to log as soon as submit is triggered, even if validation fails
+  it("logs when validation fails", async () => {
     renderWithRouter(<NhsNumSearch />)
     await userEvent.click(screen.getByTestId("find-patient-button"))
-    expect(logSearchSubmitted).not.toHaveBeenCalled()
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "NHS Number"
+    )
   })
 
   it("renders label, hint, and submit button", () => {

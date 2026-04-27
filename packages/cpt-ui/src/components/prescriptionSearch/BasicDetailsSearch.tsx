@@ -22,7 +22,6 @@ import {errorFocusMap, ErrorKey, resolveDobInvalidFields} from "@/helpers/basicD
 import {STRINGS} from "@/constants/ui-strings/BasicDetailsSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
 import {logSearchSubmitted} from "@/helpers/searchLogging"
-import {useAuth} from "@/context/AuthProvider"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {usePageTitle} from "@/hooks/usePageTitle"
@@ -115,6 +114,8 @@ export default function BasicDetailsSearch() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    logSearchSubmitted(auth, "Basic Details")
+
     // Run validation and collect any error keys
     const validationErrors = validateBasicDetails({
       firstName,
@@ -167,8 +168,6 @@ export default function BasicDetailsSearch() {
 
       return
     }
-
-    logSearchSubmitted(auth, "Basic Details")
 
     //clear any previous search navigation context
     navigationContext.startNewNavigationSession()

@@ -24,7 +24,6 @@ import {
   normalizePrescriptionId,
   PrescriptionValidationError
 } from "@/helpers/validatePrescriptionDetailsSearch"
-import {useAuth} from "@/context/AuthProvider"
 import {logSearchSubmitted} from "@/helpers/searchLogging"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
@@ -33,7 +32,6 @@ import {logger} from "@/helpers/logger"
 import {useAuth} from "@/context/AuthProvider"
 
 export default function PrescriptionIdSearch() {
-  const auth = useAuth()
   const navigate = useNavigate()
   const errorRef = useRef<HTMLDivElement | null>(null)
   const searchContext = useSearchContext()
@@ -77,6 +75,9 @@ export default function PrescriptionIdSearch() {
   // Form submit handler
   const handlePrescriptionDetails = (e: React.FormEvent) => {
     e.preventDefault()
+
+    logSearchSubmitted(authContext, "Prescription ID")
+
     const validationErrors = validatePrescriptionId(prescriptionId)
 
     if (validationErrors.length > 0) {
@@ -97,8 +98,6 @@ export default function PrescriptionIdSearch() {
     setErrors([]) // Clear errors on valid submit
 
     const formatted = normalizePrescriptionId(prescriptionId)
-
-    logSearchSubmitted(auth, "Prescription ID")
 
     //clear previous search context
     navigationContext.startNewNavigationSession()

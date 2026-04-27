@@ -19,7 +19,6 @@ import {
 import {STRINGS} from "@/constants/ui-strings/NhsNumSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
 import {logSearchSubmitted} from "@/helpers/searchLogging"
-import {useAuth} from "@/context/AuthProvider"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {validateNhsNumber, normalizeNhsNumber, NhsNumberValidationError} from "@/helpers/validateNhsNumber"
@@ -29,7 +28,6 @@ import {logger} from "@/helpers/logger"
 
 export default function NhsNumSearch() {
   const navigate = useNavigate()
-  const auth = useAuth()
   const searchContext = useSearchContext()
   const navigationContext = useNavigationContext()
   const authContext = useAuth()
@@ -70,6 +68,9 @@ export default function NhsNumSearch() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    logSearchSubmitted(authContext, "NHS Number")
+
     const validationErrors = validateNhsNumber(nhsNumber)
 
     if (validationErrors.length > 0) {
@@ -89,8 +90,6 @@ export default function NhsNumSearch() {
     }
     setErrors([])
     const normalized = normalizeNhsNumber(nhsNumber)
-
-    logSearchSubmitted(auth, "NHS Number")
 
     // clear any previous search context
     navigationContext.startNewNavigationSession()

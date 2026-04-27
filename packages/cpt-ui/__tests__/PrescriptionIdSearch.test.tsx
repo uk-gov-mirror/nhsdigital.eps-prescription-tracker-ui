@@ -215,9 +215,12 @@ describe("PrescriptionIdSearch", () => {
     )
   })
 
-  it("does not log when validation fails", async () => {
+  it("logs when validation fails", async () => {
     await setup("") // Empty input fails validation
-    expect(logSearchSubmitted).not.toHaveBeenCalled()
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "Prescription ID"
+    )
   })
 
   describe.each([

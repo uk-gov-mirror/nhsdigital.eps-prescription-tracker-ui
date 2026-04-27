@@ -281,7 +281,7 @@ describe("BasicDetailsSearch", () => {
     })
   })
 
-  it("does not log when validation fails", async () => {
+  it("logs when validation fails", async () => {
     const mockNavigate = jest.fn();
     (useNavigate as jest.Mock).mockReturnValue(mockNavigate)
 
@@ -290,7 +290,10 @@ describe("BasicDetailsSearch", () => {
     // Submit form with missing required fields
     await submitForm()
 
-    expect(logSearchSubmitted).not.toHaveBeenCalled()
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "Basic Details"
+    )
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
