@@ -60,11 +60,7 @@ const mockAuthContext: AuthContextType = {
   updateInvalidSessionCause: jest.fn(),
   isSigningOut: false,
   setIsSigningOut: jest.fn(),
-  remainingSessionTime: undefined,
-  setStateForSignOut: jest.fn().mockImplementation(() => Promise.resolve()),
-  setStateForSignIn: jest.fn().mockImplementation(() => Promise.resolve()),
-  setSessionTimeoutModalInfo: jest.fn(),
-  setLogoutModalType: jest.fn()
+  remainingSessionTime: undefined
 }
 
 const mockClearSearchParameters = jest.fn()

@@ -48,7 +48,7 @@ const signedInAuthState: AuthContextType = {
   isSignedIn: true,
   isSigningIn: false,
   invalidSessionCause: undefined,
-  error: null,
+  error: "testUser",
   user: null,
   rolesWithAccess: [],
   rolesWithoutAccess: [],
@@ -65,11 +65,7 @@ const signedInAuthState: AuthContextType = {
   updateTrackerUserInfo: jest.fn(),
   updateInvalidSessionCause: jest.fn(),
   isSigningOut: false,
-  setIsSigningOut: jest.fn(),
-  setStateForSignOut: jest.fn().mockImplementation(() => Promise.resolve()),
-  setStateForSignIn: jest.fn().mockImplementation(() => Promise.resolve()),
-  setSessionTimeoutModalInfo: jest.fn(),
-  setLogoutModalType: jest.fn()
+  setIsSigningOut: jest.fn()
 }
 
 const mockClearSearchParameters = jest.fn()
