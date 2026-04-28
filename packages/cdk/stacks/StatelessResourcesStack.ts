@@ -141,10 +141,11 @@ export class StatelessResourcesStack extends Stack {
     const userPoolClientId = Fn.importValue(`${baseImportPath}:userPoolClient:userPoolClientId`)
 
     // Logging
-    const cloudwatchKmsKeyImport = Fn.importValue("account-resources:CloudwatchLogsKmsKeyArn")
-    const splunkDeliveryStreamImport = Fn.importValue("lambda-resources:SplunkDeliveryStream")
-    const splunkSubscriptionFilterRoleImport = Fn.importValue("lambda-resources:SplunkSubscriptionFilterRole")
-    const deploymentRoleImport = Fn.importValue("ci-resources:CloudFormationDeployRole")
+    const cloudwatchKmsKeyImport = Fn.importValue("account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn")
+    const splunkDeliveryStreamImport = Fn.importValue("account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn")
+    const splunkSubscriptionFilterRoleImport =
+      Fn.importValue("account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn")
+    const deploymentRoleImport = Fn.importValue("iam-cdk:IAM:CloudFormationDeployRole:Arn")
 
     // Coerce context and imports to relevant types
     const staticContentBucket = Bucket.fromBucketArn(this, "StaticContentBucket", staticContentBucketImport)

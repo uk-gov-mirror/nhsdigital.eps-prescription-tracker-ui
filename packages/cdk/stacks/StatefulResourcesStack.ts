@@ -67,8 +67,8 @@ export class StatefulResourcesStack extends Stack {
     const rumAppName: string = this.node.tryGetContext("rumAppName")
 
     // Imports
-    const auditLoggingBucketImport = Fn.importValue("account-resources:AuditLoggingBucket")
-    const deploymentRoleImport = Fn.importValue("ci-resources:CloudFormationDeployRole")
+    const auditLoggingBucketImport = Fn.importValue("account-resources-cdk-uk:Bucket:AuditLoggingBucket:Arn")
+    const deploymentRoleImport = Fn.importValue("iam-cdk:IAM:CloudFormationDeployRole:Arn")
 
     // Coerce context and imports to relevant types
     const auditLoggingBucket = Bucket.fromBucketArn(

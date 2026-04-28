@@ -19,12 +19,13 @@ export class RumLog extends Construct {
     // Imports
     // These are imported here rather than at stack level as they are all imports from account-resources stacks
     const cloudWatchLogsKmsKey = Key.fromKeyArn(
-      this, "cloudWatchLogsKmsKey", Fn.importValue("account-resources:CloudwatchLogsKmsKeyArn"))
+      this, "cloudWatchLogsKmsKey", Fn.importValue("account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn"))
     const splunkDeliveryStream = Stream.fromStreamArn(
-      this, "SplunkDeliveryStream", Fn.importValue("lambda-resources:SplunkDeliveryStream"))
+      this, "SplunkDeliveryStream", Fn.importValue("account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn"))
 
     const splunkSubscriptionFilterRole = Role.fromRoleArn(
-      this, "splunkSubscriptionFilterRole", Fn.importValue("lambda-resources:SplunkSubscriptionFilterRole"))
+      this, "splunkSubscriptionFilterRole",
+      Fn.importValue("account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn"))
 
     // Resources
     const rumLogGroup = new LogGroup(this, "RumLogGroup", {

@@ -45,22 +45,25 @@ export class LambdaFunction extends Construct {
     // Imports
     // These are imported here rather than at stack level as they are all imports from account-resources stacks
     const cloudWatchLogsKmsKey = Key.fromKeyArn(
-      this, "cloudWatchLogsKmsKey", Fn.importValue("account-resources:CloudwatchLogsKmsKeyArn"))
+      this, "cloudWatchLogsKmsKey", Fn.importValue("account-resources-cdk-uk:KMS:CloudwatchLogsKmsKey:Arn"))
 
     const splunkDeliveryStream = Stream.fromStreamArn(
-      this, "SplunkDeliveryStream", Fn.importValue("lambda-resources:SplunkDeliveryStream"))
+      this, "SplunkDeliveryStream", Fn.importValue("account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn"))
 
     const splunkSubscriptionFilterRole = Role.fromRoleArn(
-      this, "splunkSubscriptionFilterRole", Fn.importValue("lambda-resources:SplunkSubscriptionFilterRole"))
+      this, "splunkSubscriptionFilterRole",
+      Fn.importValue("account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn"))
 
     const lambdaInsightsLogGroupPolicy = ManagedPolicy.fromManagedPolicyArn(
-      this, "lambdaInsightsLogGroupPolicy", Fn.importValue("lambda-resources:LambdaInsightsLogGroupPolicy"))
+      this, "lambdaInsightsLogGroupPolicy",
+      Fn.importValue("account-resources-cdk-uk:IAM:LambdaInsightsLogGroupPolicy:Arn"))
 
     const cloudwatchEncryptionKMSPolicyArn = ManagedPolicy.fromManagedPolicyArn(
-      this, "cloudwatchEncryptionKMSPolicyArn", Fn.importValue("account-resources:CloudwatchEncryptionKMSPolicyArn"))
+      this, "cloudwatchEncryptionKMSPolicyArn",
+      Fn.importValue("account-resources-cdk-uk:IAM:CloudwatchEncryptionKMSPolicy:Arn"))
 
     const lambdaDecryptSecretsKMSPolicy = ManagedPolicy.fromManagedPolicyArn(
-      this, "lambdaDecryptSecretsKMSPolicy", Fn.importValue("account-resources:LambdaDecryptSecretsKMSPolicy"))
+      this, "lambdaDecryptSecretsKMSPolicy", Fn.importValue("secrets-cdk:IAM:LambdaDecryptSecretsKMSPolicy:Arn"))
 
     const insightsLambdaLayer = LayerVersion.fromLayerVersionArn(
       this, "LayerFromArn", insightsLayerArn)
