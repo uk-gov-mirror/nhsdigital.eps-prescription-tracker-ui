@@ -1,5 +1,6 @@
 import React, {useEffect} from "react"
 import {Footer} from "nhsuk-react-components"
+import {useAuth} from "@/context/AuthProvider"
 
 import {
   FOOTER_COPYRIGHT,
@@ -14,6 +15,8 @@ export default function EpsFooter() {
     logger.info("Viewing site version:", {COMMIT_ID, VERSION_NUMBER})
   }, [])
 
+  const auth = useAuth()
+
   return (
     <Footer id="eps_footer" className="eps_footer" data-testid="eps_footer">
       <Footer.List>
@@ -24,6 +27,7 @@ export default function EpsFooter() {
             target={external ? "_blank" : undefined}
             rel={external ? "noopener noreferrer" : undefined}
             data-testid={testId}
+            onClick={() => auth.clearBeforeUnloadGuard()}
           >
             {text}
           </Footer.ListItem>
