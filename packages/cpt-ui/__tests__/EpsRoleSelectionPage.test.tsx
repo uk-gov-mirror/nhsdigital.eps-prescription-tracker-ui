@@ -64,8 +64,9 @@ const defaultContentText = {
   pageTitle: "Test Page Title",
   title: "Select your role",
   caption: "Choose a role to continue",
-  titleNoAccess: "You do not have access",
-  captionNoAccess: "Please contact support.",
+  titleNoAccess: "No access to the Prescription Tracker",
+  captionNoAccess: "None of the roles on your Smartcard or other authenticators allow you to access the " +
+    "Prescription Tracker. Contact your Registration Authority representative to obtain the correct code.",
   insetText: {
     visuallyHidden: "Info:",
     message: "You are logged in as",
@@ -116,7 +117,7 @@ describe("RoleSelectionPage", () => {
     render(<MemoryRouter>
       <RoleSelectionPage contentText={defaultContentText} />
     </MemoryRouter>)
-    expect(screen.getByText("There was an error selecting your role")).toBeInTheDocument()
+    expect(screen.getByText(defaultContentText.errorDuringRoleSelection)).toBeInTheDocument()
     expect(screen.getByText("Something went wrong")).toBeInTheDocument()
   })
 
@@ -132,8 +133,8 @@ describe("RoleSelectionPage", () => {
     render(<MemoryRouter>
       <RoleSelectionPage contentText={defaultContentText} />
     </MemoryRouter>)
-    expect(screen.getByText("You do not have access")).toBeInTheDocument()
-    expect(screen.getByText("Please contact support.")).toBeInTheDocument()
+    expect(screen.getByText(defaultContentText.titleNoAccess)).toBeInTheDocument()
+    expect(screen.getByText(defaultContentText.captionNoAccess)).toBeInTheDocument()
   })
 
   it("redirects if user has single roleWithAccess", () => {
@@ -164,27 +165,130 @@ describe("RoleSelectionPage", () => {
     expect(navigateMock).toHaveBeenCalledWith(FRONTEND_PATHS.SEARCH_BY_PRESCRIPTION_ID)
   })
 
-  it("renders login info when selectedRole is present", () => {
-    mockUseAuth.mockReturnValue({
-      isSigningIn: false,
-      selectedRole: {
+  describe("Pre-selected role without access scenarios", () => {
+    it("does not allow user to continue on to search when pre-selected role has no access", () => {
+      const preSelectedRoleWithoutAccess = {
         org_name: "Test Org",
         org_code: "TEST123",
         role_name: "Pharmacist",
         role_id: "1"
-      },
-      rolesWithAccess: [],
-      rolesWithoutAccess: [],
-      error: null,
-      hasSingleRoleAccess: jest.fn().mockReturnValue(false)
+      }
+
+      mockUseAuth.mockReturnValue({
+        isSigningIn: false,
+        selectedRole: preSelectedRoleWithoutAccess,
+        rolesWithAccess: [],
+        rolesWithoutAccess: [preSelectedRoleWithoutAccess],
+        error: null,
+        hasSingleRoleAccess: jest.fn().mockReturnValue(false)
+      })
+
+      render(<MemoryRouter>
+        <RoleSelectionPage contentText={defaultContentText} />
+      </MemoryRouter>)
+
+      expect(screen.queryByTestId("confirm-and-continue")).not.toBeInTheDocument()
+      expect(screen.getByText(defaultContentText.titleNoAccess)).toBeInTheDocument()
     })
 
-    render(<MemoryRouter>
-      <RoleSelectionPage contentText={defaultContentText} />
-    </MemoryRouter>)
+    it("does not show 'Continue as [role]' when selected role has complete details but no access", () => {
 
-    expect(screen.getByText(/You are currently logged in at/)).toBeInTheDocument()
-    expect(screen.getByTestId("confirm-and-continue")).toBeInTheDocument()
+      const completeRoleWithoutAccess = {
+        org_name: "Complete Org Name",
+        org_code: "COMP456",
+        role_name: "Complete Role Name",
+        role_id: "complete-role-1"
+      }
+
+      mockUseAuth.mockReturnValue({
+        isSigningIn: false,
+        selectedRole: completeRoleWithoutAccess,
+        rolesWithAccess: [],
+        rolesWithoutAccess: [completeRoleWithoutAccess],
+        error: null,
+        hasSingleRoleAccess: jest.fn().mockReturnValue(false)
+      })
+
+      render(<MemoryRouter>
+        <RoleSelectionPage contentText={defaultContentText} />
+      </MemoryRouter>)
+
+      expect(screen.queryByText(/You are currently logged in at/)).not.toBeInTheDocument()
+      expect(screen.queryByText("Complete Org Name (ODS: COMP456) with Complete Role Name")).not.toBeInTheDocument()
+      expect(screen.queryByTestId("confirm-and-continue")).not.toBeInTheDocument()
+
+      expect(screen.getByText(defaultContentText.titleNoAccess)).toBeInTheDocument()
+      expect(screen.getByText(defaultContentText.captionNoAccess)).toBeInTheDocument()
+    })
+
+    it("shows role selection info when pre-selected role has no access but other roles have access", () => {
+
+      const selectedRoleWithoutAccess = {
+        org_name: "No Access Org",
+        org_code: "NOACC789",
+        role_name: "No Access Role",
+        role_id: "no-access-1"
+      }
+
+      const roleWithAccess = {
+        org_name: "Access Org",
+        org_code: "ACC123",
+        role_name: "Access Role",
+        role_id: "access-1"
+      }
+
+      mockUseAuth.mockReturnValue({
+        isSigningIn: false,
+        selectedRole: selectedRoleWithoutAccess,
+        rolesWithAccess: [roleWithAccess],
+        rolesWithoutAccess: [selectedRoleWithoutAccess],
+        error: null,
+        hasSingleRoleAccess: jest.fn().mockReturnValue(false)
+      })
+
+      render(<MemoryRouter>
+        <RoleSelectionPage contentText={defaultContentText} />
+      </MemoryRouter>)
+
+      expect(screen.queryByText(/You are currently logged in at/)).not.toBeInTheDocument()
+      expect(screen.queryByText("No Access Org (ODS: NOACC789) with No Access Role")).not.toBeInTheDocument()
+      expect(screen.queryByTestId("confirm-and-continue")).not.toBeInTheDocument()
+
+      expect(screen.getByText(defaultContentText.title)).toBeInTheDocument()
+      expect(screen.getByText(defaultContentText.caption)).toBeInTheDocument()
+
+      const accessOrgElements = screen.getAllByText(/Access Org/)
+      expect(accessOrgElements.length).toBeGreaterThan(0)
+      const accessRoleElements = screen.getAllByText(/Access Role/)
+      expect(accessRoleElements.length).toBeGreaterThan(0)
+    })
+
+    it("shows continue confirmation when selected role has proper access", () => {
+
+      const selectedRoleWithAccess = {
+        org_name: "Valid Org",
+        org_code: "VALID123",
+        role_name: "Valid Role",
+        role_id: "valid-1"
+      }
+
+      mockUseAuth.mockReturnValue({
+        isSigningIn: false,
+        selectedRole: selectedRoleWithAccess,
+        rolesWithAccess: [selectedRoleWithAccess],
+        rolesWithoutAccess: [],
+        error: null,
+        hasSingleRoleAccess: jest.fn().mockReturnValue(false)
+      })
+
+      render(<MemoryRouter>
+        <RoleSelectionPage contentText={defaultContentText} />
+      </MemoryRouter>)
+
+      expect(screen.getByText(/You are currently logged in at/)).toBeInTheDocument()
+      expect(screen.getByText(/Valid Org.*ODS.*VALID123.*Valid Role/)).toBeInTheDocument()
+      expect(screen.getByTestId("confirm-and-continue")).toBeInTheDocument()
+    })
   })
 
   it("renders the warning callout content", () => {
@@ -231,8 +335,8 @@ describe("RoleSelectionPage", () => {
     render(<MemoryRouter>
       <RoleSelectionPage contentText={defaultContentText} />
     </MemoryRouter>)
-    expect(screen.getByText("You can't access these roles")).toBeInTheDocument()
-    expect(screen.getByText("Roles without access")).toBeInTheDocument()
+    expect(screen.getByText(defaultContentText.rolesWithoutAccessHeader)).toBeInTheDocument()
+    expect(screen.getByText(defaultContentText.roles_without_access_table_title)).toBeInTheDocument()
     expect(screen.getByText("No Access Org (ODS: NO123)")).toBeInTheDocument()
     expect(screen.getByText("Admin")).toBeInTheDocument()
   })
@@ -823,7 +927,14 @@ describe("RoleSelectionPage", () => {
         org_code: "PHA123",
         role_name: "Pharmacist"
       },
-      rolesWithAccess: [],
+      rolesWithAccess: [
+        {
+          role_id: "1",
+          org_name: "Pharmacy A",
+          org_code: "PHA123",
+          role_name: "Pharmacist"
+        }
+      ],
       rolesWithoutAccess: [],
       error: null,
       hasSingleRoleAccess: jest.fn().mockReturnValue(false)
@@ -1123,7 +1234,7 @@ describe("RoleSelectionPage", () => {
 
       expect(screen.getByText(/No Org/)).toBeInTheDocument()
       expect(screen.getByText(/No ODS/)).toBeInTheDocument()
-      expect(screen.getByText("No Role")).toBeInTheDocument()
+      expect(screen.getByText(/No Role/)).toBeInTheDocument()
       expect(screen.getByText("No address available")).toBeInTheDocument()
     })
 
