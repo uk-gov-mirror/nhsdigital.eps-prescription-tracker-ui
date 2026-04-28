@@ -799,4 +799,129 @@ describe("PrescriptionListPage", () => {
       })
     })
   })
+
+  describe("Before Unload Guard", () => {
+    it("registers the before unload guard when the page is in loading state", () => {
+      mockGetOriginalSearchParameters.mockReturnValue(null)
+
+      const pendingPromise = new Promise<never>(() => {})
+      mockedHttp.get.mockReturnValue(pendingPromise)
+
+      render(
+        <TestWrapper searchState={{nhsNumber: "9735652587", searchType: "nhs"}}>
+          <PrescriptionListPage />
+        </TestWrapper>
+      )
+
+      expect(screen.getByTestId("spinner")).toBeInTheDocument()
+      expect(mockAuth.registerBeforeUnloadGuard).toHaveBeenCalled()
+    })
+
+    it("registers the before unload guard after search results load successfully", async () => {
+      mockGetOriginalSearchParameters.mockReturnValue(null)
+
+      mockedHttp.get.mockResolvedValue({
+        status: 200,
+        data: mockSearchResponse
+      })
+
+      render(
+        <TestWrapper searchState={{nhsNumber: "9735652587", searchType: "nhs"}}>
+          <PrescriptionListPage />
+        </TestWrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByTestId("prescription-tabs")).toBeInTheDocument()
+      })
+
+      expect(mockAuth.registerBeforeUnloadGuard).toHaveBeenCalled()
+    })
+
+    it("clears the before unload guard when the component unmounts", async () => {
+      mockGetOriginalSearchParameters.mockReturnValue(null)
+
+      mockedHttp.get.mockResolvedValue({
+        status: 200,
+        data: mockSearchResponse
+      })
+
+      const {unmount} = render(
+        <TestWrapper searchState={{nhsNumber: "9735652587", searchType: "nhs"}}>
+          <PrescriptionListPage />
+        </TestWrapper>
+      )
+
+      await waitFor(() => {
+        expect(screen.getByTestId("prescription-tabs")).toBeInTheDocument()
+      })
+
+      unmount()
+
+      expect(mockAuth.clearBeforeUnloadGuard).toHaveBeenCalled()
+    })
+
+    it("triggers the browser unload prompt when the user tries to refresh or navigate away during loading", () => {
+      mockGetOriginalSearchParameters.mockReturnValue(null)
+
+      const pendingPromise = new Promise<never>(() => {})
+      mockedHttp.get.mockReturnValue(pendingPromise)
+
+      // Use a real guard implementation to prove the actual beforeunload behavior end-to-end
+      let guardHandler: ((e: BeforeUnloadEvent) => void) | null = null
+      const registerSpy = jest.fn().mockImplementation(() => {
+        if (guardHandler) return
+        guardHandler = (e: BeforeUnloadEvent) => {
+          e.preventDefault()
+          e.returnValue = ""
+        }
+        window.addEventListener("beforeunload", guardHandler)
+      })
+      const clearSpy = jest.fn().mockImplementation(() => {
+        if (guardHandler) {
+          window.removeEventListener("beforeunload", guardHandler)
+          guardHandler = null
+        }
+      })
+
+      const patientDetailsState = {
+        patientDetails: undefined,
+        patientFallback: false,
+        setPatientDetails: jest.fn(),
+        setPatientFallback: jest.fn(),
+        clear: jest.fn()
+      }
+
+      render(
+        <MemoryRouter initialEntries={[FRONTEND_PATHS.PRESCRIPTION_LIST_CURRENT]}>
+          <AuthContext.Provider value={{
+            ...mockAuth,
+            registerBeforeUnloadGuard: registerSpy,
+            clearBeforeUnloadGuard: clearSpy
+          }}>
+            <SearchContext.Provider value={{...mockSearchState, nhsNumber: "9735652587", searchType: "nhs"}}>
+              <NavigationProvider>
+                <PatientDetailsContext.Provider value={patientDetailsState}>
+                  <PrescriptionListPage />
+                </PatientDetailsContext.Provider>
+              </NavigationProvider>
+            </SearchContext.Provider>
+          </AuthContext.Provider>
+        </MemoryRouter>
+      )
+
+      expect(screen.getByTestId("spinner")).toBeInTheDocument()
+      expect(registerSpy).toHaveBeenCalled()
+
+      // Simulate browser refresh / navigate-away attempt
+      const event = new Event("beforeunload", {cancelable: true})
+      const preventDefaultSpy = jest.spyOn(event, "preventDefault")
+      window.dispatchEvent(event)
+
+      expect(preventDefaultSpy).toHaveBeenCalled()
+
+      // Cleanup the listener to avoid leaking into other tests
+      clearSpy()
+    })
+  })
 })
