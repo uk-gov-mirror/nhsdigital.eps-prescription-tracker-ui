@@ -1,3 +1,4 @@
+import {RemovalPolicy} from "aws-cdk-lib"
 import {ICertificate} from "aws-cdk-lib/aws-certificatemanager"
 import {
   BehaviorOptions,
@@ -70,20 +71,24 @@ export class CloudfrontDistribution extends Construct {
       new ARecord(this, "CloudFrontAliasIpv4Record", {
         zone: props.hostedZone,
         target: RecordTarget.fromAlias(new CloudFrontTarget(cloudfrontDistribution))})
+        .applyRemovalPolicy(RemovalPolicy.RETAIN)
 
       new AaaaRecord(this, "CloudFrontAliasIpv6Record", {
         zone: props.hostedZone,
         target: RecordTarget.fromAlias(new CloudFrontTarget(cloudfrontDistribution))})
+        .applyRemovalPolicy(RemovalPolicy.RETAIN)
     } else {
       new ARecord(this, "CloudFrontAliasIpv4Record", {
         zone: props.hostedZone,
         recordName: props.shortCloudfrontDomain,
         target: RecordTarget.fromAlias(new CloudFrontTarget(cloudfrontDistribution))})
+        .applyRemovalPolicy(RemovalPolicy.RETAIN)
 
       new AaaaRecord(this, "CloudFrontAliasIpv6Record", {
         zone: props.hostedZone,
         recordName: props.shortCloudfrontDomain,
         target: RecordTarget.fromAlias(new CloudFrontTarget(cloudfrontDistribution))})
+        .applyRemovalPolicy(RemovalPolicy.RETAIN)
     }
 
     // Outputs
