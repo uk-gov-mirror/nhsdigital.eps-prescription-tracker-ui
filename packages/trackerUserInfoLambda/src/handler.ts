@@ -92,7 +92,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventBase<AuthResult>): Promi
   }
 
   // Calculate remaining session time based on lastActivityTime
-  const fifteenMinutes = 15 * 60 * 1000
+  const fifteenMinutes = 5 * 60 * 1000
   let remainingSessionTime: number | undefined = undefined
 
   if (tokenDetails?.lastActivityTime) {
