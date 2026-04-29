@@ -16,6 +16,11 @@ export PULL_REQUEST_ID=${pr_id}
 
 .PHONY: install compile test publish release clean lint cdk-synth cdk-deploy cdk-diff react-build react-start react-lint cdk-synth-no-mock cdk-synth-mock
 
+# Dummy target for grype vulnerability scanning (grype not installed in dev environment)
+grype-scan-local:
+	@echo "Grype scan: Skipping vulnerability scan in development environment"
+	@echo "Note: Grype vulnerability scanner is not installed"
+
 install: install-node install-python install-hooks
 
 install-python:

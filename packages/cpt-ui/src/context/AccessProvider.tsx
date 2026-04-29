@@ -15,6 +15,7 @@ import {
   heartbeatTab,
   pruneStaleTabIds
 } from "@/helpers/tabHelpers"
+import {TrackerUserInfoResult} from "@cpt-ui-common/common-types"
 import {checkForRecentLogoutMarker} from "@/helpers/logout"
 
 import {ALLOWED_NO_ROLE_PATHS, FRONTEND_PATHS, PUBLIC_PATHS} from "@/constants/environment"
@@ -192,6 +193,65 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
     }
   }
 
+  const handleSessionTimeout = (remainingSeconds: number, remainingTime: number) => {
+    const twoMinutes = 2 * 60 // 2 minutes in seconds
+    const currentPath = normalizePath(location.pathname)
+
+    if (remainingSeconds <= twoMinutes && remainingSeconds > 0) {
+      if (currentPath === FRONTEND_PATHS.SELECT_YOUR_ROLE) {
+        return
+      }
+
+      // Show timeout modal when 2 minutes or less remaining
+      logger.info("Session timeout warning triggered - showing modal", {
+        remainingTime,
+        remainingSeconds
+      })
+      auth.setLogoutModalType("timeout")
+      auth.setSessionTimeoutModalInfo({
+        showModal: true,
+        sessionEndTime: Date.now() + (remainingSeconds * 1000),
+        buttonDisabled: false,
+        action: undefined
+      })
+    } else if (remainingSeconds <= 0) {
+      logger.warn("Session expired - automatically logging out user")
+      auth.updateInvalidSessionCause("Timeout")
+      handleSignoutEvent(auth, navigate, "Timeout")
+    } else {
+      // Session still valid, ensure modal is hidden and update time info
+      logger.debug("Session still valid - hiding modal if shown", {
+        remainingTime
+      })
+      auth.setSessionTimeoutModalInfo({
+        showModal: false,
+        sessionEndTime: null,
+        buttonDisabled: false,
+        action: undefined
+      })
+    }
+  }
+
+  const handleUserInfoResponse = (response: TrackerUserInfoResult) => {
+    if (response.error) {
+      logger.debug("updateTrackerUserInfo returned error, signing out user", response.error)
+      handleSignoutEvent(auth, navigate, "UserInfoCheck", response.invalidSessionCause)
+      return
+    }
+
+    const remainingTime = response.remainingSessionTime
+    const remainingSeconds = remainingTime !== undefined ? Math.floor(remainingTime / 1000) : undefined
+
+    if (remainingSeconds !== undefined && remainingTime !== undefined) {
+      handleSessionTimeout(remainingSeconds, remainingTime)
+    } else {
+      // No remaining session time info available - this indicates a session integrity issue
+      logger.warn("No remainingSessionTime in response - session may be corrupted, logging out user")
+      auth.updateInvalidSessionCause("InvalidSession")
+      handleSignoutEvent(auth, navigate, "InvalidSession")
+    }
+  }
+
   const checkUserInfo = () => {
     // Check if a user is signed in, if it fails sign the user out
     if (auth.isSigningIn && ALLOWED_NO_ROLE_PATHS.includes(location.pathname)) {
@@ -201,57 +261,11 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
 
     if (auth.isSignedIn && !auth.isSigningOut && !checkForRecentLogoutMarker("checkUserInfo")) {
       logger.debug("Refreshing user info")
-
-      auth.updateTrackerUserInfo().then((response) => {
-        if (response.error) {
-          logger.debug("updateTrackerUserInfo returned error, signing out user", response.error)
-          handleSignoutEvent(auth, navigate, "UserInfoCheck", response.invalidSessionCause)
-        } else {
-          const remainingTime = response.remainingSessionTime
-          const remainingSeconds = remainingTime !== undefined ? Math.floor(remainingTime / 1000) : undefined
-
-          if (remainingSeconds !== undefined) {
-            const twoMinutes = 2 * 60 // Minutes into seconds
-
-            if (remainingSeconds <= twoMinutes && remainingSeconds > 0) {
-              // Show timeout modal when 2 minutes or less remaining
-              logger.info("Session timeout warning triggered - showing modal", {
-                remainingTime,
-                remainingSeconds
-              })
-              auth.setLogoutModalType("timeout")
-              auth.setSessionTimeoutModalInfo({
-                showModal: true,
-                timeLeft: remainingSeconds,
-                buttonDisabled: false,
-                action: undefined
-              })
-            } else if (remainingSeconds <= 0) {
-              logger.warn("Session expired - automatically logging out user")
-              auth.updateInvalidSessionCause("Timeout")
-              handleSignoutEvent(auth, navigate, "Timeout")
-            } else {
-              // Session still valid, ensure modal is hidden and update time info
-              logger.debug("Session still valid - hiding modal if shown", {remainingTime})
-              auth.setSessionTimeoutModalInfo({
-                showModal: false,
-                timeLeft: remainingSeconds,
-                buttonDisabled: false,
-                action: undefined
-              })
-            }
-          } else {
-          // No remaining session time info available - this indicates a session integrity issue
-            logger.warn("No remainingSessionTime in response - session may be corrupted, logging out user")
-            auth.updateInvalidSessionCause("InvalidSession")
-            handleSignoutEvent(auth, navigate, "InvalidSession")
-          }
-        }
-      })
+      auth.updateTrackerUserInfo().then(handleUserInfoResponse)
+      return
     }
 
     logger.debug("No conditions met - not checking user info")
-    return
   }
 
   useEffect(() => {
