@@ -5,7 +5,7 @@ on:
 permissions: {}
 jobs:
   get_config_values:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
+    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@ba4bcd7fa2367cc44c9078adb96a654236d3691a
     with:
       verify_published_from_main_image: false
     permissions:
@@ -32,7 +32,7 @@ jobs:
   quality_checks:
     # always run, but only block in the non-skip case
     needs: [get_commit_message, get_config_values]
-    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@8399c1f015c1304e40771cbd8ccc24c7ed48fdbc
+    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@ba4bcd7fa2367cc44c9078adb96a654236d3691a
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
     permissions:
@@ -124,7 +124,7 @@ jobs:
         if: ${{ contains(needs.get_commit_message.outputs.commit_message, '#skip-qc') }}
         run: echo "Skipping QC gate per commit message."
   pr_title_format_check:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/pr_title_check.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
+    uses: NHSDigital/eps-common-workflows/.github/workflows/pr_title_check.yml@c4efd04c5ff1c7e92e7fe5932b29d0de1a301cdf
     permissions:
       pull-requests: write
   get_issue_number:
@@ -153,7 +153,7 @@ jobs:
           result-encoding: string
   tag_release:
     needs: [get_config_values]
-    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@e798d5aee897de6f7dc387dd5623fcd9ba4c8929
+    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@c4efd04c5ff1c7e92e7fe5932b29d0de1a301cdf
     permissions:
       id-token: write
       contents: write
