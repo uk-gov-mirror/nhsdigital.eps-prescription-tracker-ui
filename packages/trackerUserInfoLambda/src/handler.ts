@@ -161,9 +161,6 @@ const lambdaHandler = async (event: APIGatewayProxyEventBase<AuthResult>): Promi
   }
   await updateTokenMapping(documentClient, tokenMappingTableName, item, logger)
 
-  // For fresh responses, user just made a request so they have full 15 minutes
-  const freshremainingSessionTime = 15 * 60 * 1000 // Full 15 minutes
-
   return {
     statusCode: 200,
     body: JSON.stringify({
@@ -172,7 +169,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventBase<AuthResult>): Promi
         ...userInfoResponse,
         is_concurrent_session: isConcurrentSession,
         sessionId: sessionId,
-        remainingSessionTime: freshremainingSessionTime
+        remainingSessionTime: remainingSessionTime
       }
     })
   }
