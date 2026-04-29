@@ -261,8 +261,8 @@ jobs:
       mockOidcTokenEndpoint: "https://internal-qa.api.service.nhs.uk/oauth2-mock/token"
       mockOidcUserInfoEndpoint: "https://internal-qa.api.service.nhs.uk/oauth2-mock/userinfo"
       mockOidcjwksEndpoint: "https://identity.ptl.api.platform.nhs.uk/realms/Cis2-mock-internal-qa/protocol/openid-connect/certs"
-      allowLocalhostAccess: true
-      useCustomCognitoDomain: false
+      allowLocalhostAccess: false
+      useCustomCognitoDomain: true
       APIGEE_CIS2_TOKEN_ENDPOINT: "https://internal-qa.api.service.nhs.uk/oauth2-int/token"
       APIGEE_MOCK_TOKEN_ENDPOINT: "https://internal-qa.api.service.nhs.uk/oauth2-mock/token"
       APIGEE_PRESCRIPTIONS_ENDPOINT: "https://internal-qa.api.service.nhs.uk/clinical-prescription-tracker/"
@@ -271,7 +271,6 @@ jobs:
       JWT_KID: "eps-cpt-ui-qa"
       ROLE_ID: "555254242106"
       LOG_LEVEL: "DEBUG"
-      RUN_REGRESSION_TESTS: true
       WAF_ALLOW_GA_RUNNER_CONNECTIVITY: true
       USE_ZONE_APEX: false
       ROUTE53_EXPORT_NAME: EPS
