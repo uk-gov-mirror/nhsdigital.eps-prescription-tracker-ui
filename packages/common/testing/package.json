@@ -10,14 +10,13 @@
     "unit": "jest",
     "lint": "eslint  --max-warnings 0 --fix --config ../../../eslint.config.mjs .",
     "compile": "tsc --build",
-    "test": "npm run compile && npm run unit",
-    "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
+    "test": "npm run compile && npm run unit"
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.32.0"
   },
   "devDependencies": {
     "@cpt-ui-common/common-types": "^1.0.0",
-    "axios": "^1.13.6"
+    "axios": "^1.14.0"
   }
 }

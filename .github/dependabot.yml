@@ -24,7 +24,7 @@ updates:
     commit-message:
       prefix: "Upgrade: [dependabot] - "
     cooldown:
-      default-days: 3
+      default-days: 7
   - package-ecosystem: "github-actions"
     # Workflow files stored in the
     # default location of `.github/workflows`
@@ -37,7 +37,7 @@ updates:
     commit-message:
       prefix: "Upgrade: [dependabot] - "
     cooldown:
-      default-days: 3
+      default-days: 7
   ###################################
   # NPM workspace  ##################
   ###################################
@@ -54,4 +54,9 @@ updates:
     registries:
       - npm-github
     cooldown:
-      default-days: 3
+      default-days: 7
+    ignore:
+    # The latest update to @types/fhir was 0.0.41.
+    #   Dependabot tried to bump to '3.0.2', which doesn't exist
+    #   https://github.com/NHSDigital/eps-prescription-tracker-ui/pull/2017
+      - dependency-name: "@types/fhir"

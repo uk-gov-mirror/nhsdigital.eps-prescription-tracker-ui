@@ -1,47 +1,46 @@
 name: deploy_pr
-
 on:
   pull_request:
     branches: [main]
-
-env:
-  BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-
+permissions: {}
 jobs:
   get_config_values:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@5ac2707dd9cd60ad127275179495b9c890d74711
+    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@ba4bcd7fa2367cc44c9078adb96a654236d3691a
     with:
       verify_published_from_main_image: false
-  dependabot-auto-approve-and-merge:
-    needs: quality_checks
-    uses: NHSDigital/eps-common-workflows/.github/workflows/dependabot-auto-approve-and-merge.yml@5ac2707dd9cd60ad127275179495b9c890d74711
-    secrets:
-      AUTOMERGE_APP_ID: ${{ secrets.AUTOMERGE_APP_ID }}
-      AUTOMERGE_PEM: ${{ secrets.AUTOMERGE_PEM }}
+    permissions:
+      attestations: read
+      contents: read
+      packages: read
   get_commit_message:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
     outputs:
       commit_message: ${{ steps.commit_message.outputs.commit_message }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: ${{ env.BRANCH_NAME }}
-          fetch-depth: 0
+          persist-credentials: false
+          fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Get Commit message
         id: commit_message
         run: |
           echo "commit_message=$(git show -s --format=%s)" >> "$GITHUB_OUTPUT"
-
   quality_checks:
     # always run, but only block in the non-skip case
     needs: [get_commit_message, get_config_values]
-    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@5ac2707dd9cd60ad127275179495b9c890d74711
+    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@ba4bcd7fa2367cc44c9078adb96a654236d3691a
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   quality_gate:
     needs: get_commit_message
     runs-on: ubuntu-22.04
@@ -49,7 +48,7 @@ jobs:
     steps:
       - name: Wait for quality checks to succeed
         if: ${{ ! contains(needs.get_commit_message.outputs.commit_message, '#skip-qc') }}
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: json
@@ -63,58 +62,77 @@ jobs:
             const maxRetries = 120; // 20 minutes at 10 seconds each
             let attempts = 0;
 
-            async function fetchQCJob() {
+            async function fetchQCJobs() {
               const { data } = await github.rest.actions.listJobsForWorkflowRun({
                 owner, repo, run_id: runId
               });
-              return data.jobs.find(job => job.name === 'quality_checks / quality_checks');
+              return data.jobs.filter(job => job.name.startsWith('quality_checks'));
             }
 
-            let qc = await fetchQCJob();
-            while ((!qc || qc.status !== 'completed') && attempts < maxRetries) {
+            let qcJobs = await fetchQCJobs();
+            while (attempts < maxRetries) {
+              const allCompleted = qcJobs.length > 0 && qcJobs.every(qc => qc.status === 'completed');
+              if (allCompleted) {
+                break;
+              }
+
               attempts++;
-              console.log(`Attempt #${attempts}: ` +
-                (qc
-                  ? `found job “${qc.name}” with status=${qc.status}`
-                  : 'no matching quality_checks job yet'));
+
+              if (qcJobs.length === 0) {
+                console.log(`Attempt #${attempts}: no matching quality_checks jobs yet`);
+              } else {
+                const incompleteJobs = qcJobs
+                  .filter(qc => qc.status !== 'completed')
+                  .map(qc => `“${qc.name}” status=${qc.status}`)
+                  .join(', ');
+                console.log(`Attempt #${attempts}: waiting for quality_checks jobs to complete: ${incompleteJobs}`);
+              }
+
+              if (attempts >= maxRetries) {
+                break;
+              }
+
               await new Promise(r => setTimeout(r, pollTime));
-              qc = await fetchQCJob();
+              qcJobs = await fetchQCJobs();
             }
 
-            if (!qc) {
+            if (qcJobs.length === 0) {
               core.setFailed(
                 `Timed out waiting for a “quality_checks” job (after ${attempts} polls).`
               );
               return;
             }
 
-            if (qc.status !== 'completed') {
-              core.setFailed(
-                `Quality checks job never completed (last status=${qc.status}).`
-              );
-              return;
+            for (const qc of qcJobs) {
+              if (qc.status !== 'completed') {
+                core.setFailed(
+                  `Quality checks job ${qc.name} never completed (last status=${qc.status})`
+                );
+                return;
+              }
             }
 
-            if (qc.conclusion !== 'success') {
-              core.setFailed(
-                `Quality checks failed (conclusion=${qc.conclusion}).`
-              );
+            for (const qc of qcJobs) {
+              if (qc.conclusion !== 'success' && qc.conclusion !== 'skipped') {
+                core.setFailed(
+                  `Quality checks job ${qc.name} failed (conclusion=${qc.conclusion}).`
+                );
+                return;
+              }
             }
-
       - name: Bypass QC gate
         if: ${{ contains(needs.get_commit_message.outputs.commit_message, '#skip-qc') }}
         run: echo "Skipping QC gate per commit message."
-
   pr_title_format_check:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/pr_title_check.yml@5ac2707dd9cd60ad127275179495b9c890d74711
-
+    uses: NHSDigital/eps-common-workflows/.github/workflows/pr_title_check.yml@c4efd04c5ff1c7e92e7fe5932b29d0de1a301cdf
+    permissions:
+      pull-requests: write
   get_issue_number:
     runs-on: ubuntu-22.04
     outputs:
       issue_number: ${{steps.get_issue_number.outputs.result}}
-
     steps:
-      - uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3
         name: get issue number
         id: get_issue_number
         with:
@@ -133,20 +151,18 @@ jobs:
               ).data[0].number;
             }
           result-encoding: string
-
   tag_release:
     needs: [get_config_values]
-    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@5ac2707dd9cd60ad127275179495b9c890d74711
+    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@c4efd04c5ff1c7e92e7fe5932b29d0de1a301cdf
     permissions:
       id-token: write
       contents: write
+      packages: write
     with:
       dry_run: true
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       branch_name: ${{ github.event.pull_request.head.ref }}
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
-    secrets: inherit
-
   get_commit_id:
     runs-on: ubuntu-22.04
     outputs:
@@ -156,9 +172,12 @@ jobs:
         id: commit_id
         run: |
           echo "commit_id=${{ github.sha }}" >> "$GITHUB_OUTPUT"
-
   package_code:
     needs: [get_issue_number, get_commit_id, quality_gate, get_config_values]
+    permissions:
+      contents: read
+      packages: read
+      id-token: write
     if: |
       always() &&
       ! contains(needs.*.result, 'failure') &&
@@ -168,7 +187,6 @@ jobs:
       VERSION_NUMBER: PR-${{ needs.get_issue_number.outputs.issue_number }}
       COMMIT_ID: ${{ needs.get_commit_id.outputs.commit_id }}
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
-
   release_code:
     needs: [get_issue_number, package_code, get_commit_id, get_config_values]
     if: |
@@ -176,6 +194,9 @@ jobs:
       ! contains(needs.*.result, 'failure') &&
       ! contains(needs.*.result, 'cancelled')
     uses: ./.github/workflows/release_all_stacks.yml
+    permissions:
+      contents: write
+      id-token: write
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       SERVICE_NAME: cpt-ui-pr-${{needs.get_issue_number.outputs.issue_number}}
@@ -222,4 +243,6 @@ jobs:
     steps:
       - name: Report Deployed URL
         run: |
-          echo "Deployed URL: https://cpt-ui-pr-${{ needs.get_issue_number.outputs.issue_number }}.dev.eps.national.nhs.uk" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deployed URL: https://cpt-ui-pr-${ISSUE_NUMBER}.dev.eps.national.nhs.uk" >> "$GITHUB_STEP_SUMMARY"
+        env:
+          ISSUE_NUMBER: ${{ needs.get_issue_number.outputs.issue_number }}

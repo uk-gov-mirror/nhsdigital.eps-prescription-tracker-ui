@@ -17,7 +17,7 @@ import {
 import {DoHSData} from "../src/utils/types"
 
 import {mergePrescriptionDetails} from "../src/utils/responseMapper"
-import {PrescriptionOdsCodes} from "src/utils/extensionUtils"
+import {PrescriptionOdsCodes} from "../src/utils/extensionUtils"
 
 describe("mergePrescriptionDetails", () => {
   const participantExtensionUrl =
@@ -692,6 +692,41 @@ describe("mergePrescriptionDetails", () => {
       epsStatusCode: "0007",
       pharmacyStatus: undefined,
       itemPendingCancellation: false,
+      cancellationReason: undefined,
+      notDispensedReason: undefined
+    }])
+  })
+
+  // old pending cancellation
+  it("should handle the old format of the pending cancellation extension", () => {
+    medicationRequest.extension![1].extension![0].valueBoolean = true
+    const result = mergePrescriptionDetails(prescriptionBundle, {}, odsCodes)
+
+    expect(result.items).toEqual([{
+      medicationName: "Drug A",
+      quantity: "20",
+      dosageInstructions: "Take two daily",
+      epsStatusCode: "0007",
+      pharmacyStatus: undefined,
+      itemPendingCancellation: true,
+      cancellationReason: undefined,
+      notDispensedReason: undefined
+    }])
+  })
+
+  // new pending cancellation
+  it("should handle the pending cancellation extension", () => {
+    delete medicationRequest.extension![1].extension
+    medicationRequest.extension![1].valueBoolean = true
+    const result = mergePrescriptionDetails(prescriptionBundle, {}, odsCodes)
+
+    expect(result.items).toEqual([{
+      medicationName: "Drug A",
+      quantity: "20",
+      dosageInstructions: "Take two daily",
+      epsStatusCode: "0007",
+      pharmacyStatus: undefined,
+      itemPendingCancellation: true,
       cancellationReason: undefined,
       notDispensedReason: undefined
     }])

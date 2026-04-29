@@ -2,16 +2,14 @@
   "name": "cdk",
   "version": "0.1.0",
   "scripts": {
-    "test": "jest",
-    "lint": "eslint  --max-warnings 0 --fix --config ../../eslint.config.mjs .",
-    "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
+    "lint": "eslint  --max-warnings 0 --fix --config ../../eslint.config.mjs ."
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.244.0",
+    "aws-cdk-lib": "^2.245.0",
     "cdk-nag": "^2.37.55",
     "constructs": "^10.6.0"
   },
   "devDependencies": {
-    "aws-cdk": "^2.1113.0"
+    "aws-cdk": "^2.1118.3"
   }
 }

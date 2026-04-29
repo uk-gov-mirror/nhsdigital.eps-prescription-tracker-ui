@@ -1,7 +1,6 @@
 import React, {
   Fragment,
   useEffect,
-  useMemo,
   useRef,
   useState
 } from "react"
@@ -23,28 +22,25 @@ import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {validateNhsNumber, normalizeNhsNumber, NhsNumberValidationError} from "@/helpers/validateNhsNumber"
 import {usePageTitle} from "@/hooks/usePageTitle"
+import {useAuth} from "@/context/AuthProvider"
+import {logger} from "@/helpers/logger"
 
 export default function NhsNumSearch() {
   const navigate = useNavigate()
   const searchContext = useSearchContext()
   const navigationContext = useNavigationContext()
+  const authContext = useAuth()
   const [nhsNumber, setNhsNumber] = useState<string>(
     searchContext.nhsNumber || ""
   )
-  const [errorKey, setErrorKey] = useState<NhsNumberValidationError | null>(
-    null
-  )
+  const [errors, setErrors] = useState<Array<NhsNumberValidationError>>([])
   const errorRef = useRef<HTMLDivElement | null>(null)
 
-  const errorMessages = STRINGS.errors
+  const errorMessages = STRINGS.ERRORS
 
-  const displayedError = useMemo(() => errorKey ? errorMessages[errorKey] : "", [errorKey])
-
-  // usePageTitle(STRINGS.pageTitle)
-
-  usePageTitle(errorKey
-    ? STRINGS.pageTitle_ERROR
-    : STRINGS.pageTitle)
+  usePageTitle(errors.length > 0
+    ? STRINGS.PAGE_TITLE_ERROR
+    : STRINGS.PAGE_TITLE)
 
   useEffect(() => {
     if (searchContext.nhsNumber && searchContext.searchType === "nhs") {
@@ -60,10 +56,10 @@ export default function NhsNumSearch() {
   }, [navigationContext])
 
   useEffect(() => {
-    if (errorKey && errorRef.current) {
+    if (errors.length > 0 && errorRef.current) {
       errorRef.current.focus()
     }
-  }, [errorKey])
+  }, [errors])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNhsNumber(e.target.value)
@@ -71,13 +67,24 @@ export default function NhsNumSearch() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const validationError = validateNhsNumber(nhsNumber)
+    const validationErrors = validateNhsNumber(nhsNumber)
 
-    if (validationError) {
-      setErrorKey(validationError)
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors)
+
+      logger.debug("Form validation errors", {
+        sessionId: authContext.sessionId,
+        userId: authContext.userDetails?.sub,
+        orgName: authContext.selectedRole?.org_name,
+        orgCode: authContext.selectedRole?.org_code,
+        searchType: "nhsNumberSearch",
+        errors: validationErrors.join(", "),
+        errorCount: validationErrors.length
+      }, true)
+
       return
     }
-    setErrorKey(null)
+    setErrors([])
     const normalized = normalizeNhsNumber(nhsNumber)
 
     // clear any previous search context
@@ -100,35 +107,42 @@ export default function NhsNumSearch() {
 
   return (
     <Fragment>
-      {errorKey && (
+      {errors.length > 0 && (
         <ErrorSummary ref={errorRef} data-testid="error-summary" className="prescription-id-aligned-element">
-          <ErrorSummary.Title>{STRINGS.errorSummaryHeading}</ErrorSummary.Title>
+          <ErrorSummary.Title>{STRINGS.ERROR_SUMMARY_HEADING}</ErrorSummary.Title>
           <ErrorSummary.Body>
             <ErrorSummary.List>
-              <ErrorSummary.Item>
-                <a href="#nhs-number-input">{displayedError}</a>
-              </ErrorSummary.Item>
+              {errors.map((error) => (
+                <ErrorSummary.Item key={error} href="#nhs-number-input">
+                  {errorMessages[error]}
+                </ErrorSummary.Item>
+              ))}
             </ErrorSummary.List>
           </ErrorSummary.Body>
         </ErrorSummary>
       )}
       <div className="prescription-id-aligned-element">
         <Form onSubmit={handleSubmit} noValidate data-testid="nhs-number-form">
-          <FormGroup className={errorKey ? "nhsuk-form-group--error" : ""}>
+          <FormGroup className={errors.length > 0 ? "nhsuk-form-group--error" : ""}>
             <Label htmlFor="nhs-number-input" id="nhs-number-label" data-testid="nhs-number-label">
               <h2 className="nhsuk-heading-m nhsuk-u-margin-bottom-1 no-outline"
                 data-testid="nhs-number-search-heading">
-                <span className="nhsuk-u-visually-hidden">{STRINGS.hiddenText}</span>
-                {STRINGS.labelText}
+                <span className="nhsuk-u-visually-hidden">{STRINGS.HIDDEN_TEXT}</span>
+                {STRINGS.LABEL_TEXT}
               </h2>
             </Label>
             <HintText id="nhs-number-hint" data-testid="nhs-number-hint">
-              {STRINGS.hintText}
+              {STRINGS.HINT_TEXT}
             </HintText>
 
-            {errorKey && (
-              <ErrorMessage id="nhs-number-error" data-testid={`error-message-${errorKey}`}>
-                {displayedError}
+            {errors.length > 0 && (
+              <ErrorMessage id="nhs-number-error" data-testid="error-message-multiple">
+                {errors.map((error, index) => (
+                  <div key={error}>
+                    {errorMessages[error]}
+                    {index < errors.length - 1 && <br />}
+                  </div>
+                ))}
               </ErrorMessage>
             )}
 
@@ -138,15 +152,15 @@ export default function NhsNumSearch() {
               value={nhsNumber}
               onChange={handleChange}
               autoComplete="off"
-              className={`nhsuk-input--width-10 ${errorKey ? "nhsuk-input--error" : ""}`}
-              aria-describedby={errorKey ? "nhs-number-hint nhs-number-error" : "nhs-number-hint"}
+              className={`nhsuk-input--width-10 ${errors.length > 0 ? "nhsuk-input--error" : ""}`}
+              aria-describedby={errors.length > 0 ? "nhs-number-hint nhs-number-error" : "nhs-number-hint"}
               aria-labelledby="nhs-number-label"
               data-testid="nhs-number-input"
             />
           </FormGroup>
 
           <Button type="submit" id="nhs-number-submit" data-testid="find-patient-button">
-            {STRINGS.buttonText}
+            {STRINGS.BUTTON_TEXT}
           </Button>
         </Form>
       </div>

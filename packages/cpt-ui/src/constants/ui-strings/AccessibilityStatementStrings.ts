@@ -53,12 +53,14 @@ export const AccessibilityStatementStrings = {
     HEADER: "Feedback and contact information",
     P1: [
       "If you find any problems not listed on this page or think we're not meeting accessibility requirements, email ",
-      {text: "epssupport@nhs.net", href: "mailto:epssupport@nhs.net"} satisfies RichTextNode,
+      {text: "england.prescriptiontrackerpilot@nhs.net",
+        href: "mailto:england.prescriptiontrackerpilot@nhs.net"} satisfies RichTextNode,
       "."
     ] satisfies Array<RichTextNode>,
     P2: [
       "If you need information on this website in a different format, email ",
-      {text: "epssupport@nhs.net", href: "mailto:epssupport@nhs.net"} satisfies RichTextNode,
+      {text: "england.prescriptiontrackerpilot@nhs.net",
+        href: "mailto:england.prescriptiontrackerpilot@nhs.net"} satisfies RichTextNode,
       "."
     ] satisfies Array<RichTextNode>,
     P3: "We'll consider your request and get back to you within 5 working days."
@@ -94,7 +96,7 @@ export const AccessibilityStatementStrings = {
     + " criteria that the Prescription Tracker is not compliant with and why.",
     SUBHEADER: "Non-compliance with the accessibility regulations",
     SUB_LIST_ITEMS: [
-      "screen readers do not continue to read content when you select a new tab on the "
+      "Screen readers do not continue to read content when you select a new tab on the "
       + "‘Search for a prescription’ "
       + "page. This fails WCAG 2.2 success criterion 2.4.3 (focus order).",
       "Using the tab key does not focus the ‘Skip to main content’ link after a page is loaded. This fails "

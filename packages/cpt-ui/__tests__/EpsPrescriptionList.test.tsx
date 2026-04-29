@@ -30,14 +30,11 @@ jest.mock("@/constants/environment", () => ({
   },
   ENV_CONFIG: {
     TARGET_ENVIRONMENT: "test",
-    API_DOMAIN_OVERRIDE: undefined,
     BASE_PATH: "site",
-    LOCAL_DEV: false,
     BASE_URL: "http://localhost",
     BASE_URL_PATH: "http://localhost/site/"
   },
   APP_CONFIG: {
-    SERVICE_NAME: "test-service",
     COMMIT_ID: "test-commit",
     VERSION_NUMBER: "1.0.0",
     REACT_LOG_LEVEL: "debug"
@@ -58,10 +55,6 @@ jest.mock("@/constants/environment", () => ({
     APPLICATION_ID: "test-app-id",
     REGION: "eu-west-2",
     VERSION: "1.0.0",
-    ALLOW_COOKIES: true,
-    ENABLE_XRAY: false,
-    SESSION_SAMPLE_RATE: 1,
-    TELEMETRIES: [],
     RELEASE_ID: "test-commit"
   },
   FRONTEND_PATHS: {
@@ -216,8 +209,7 @@ const mockSearchResponse: SearchResponse = {
       prescriptionTreatmentType: TreatmentType.REPEAT,
       issueNumber: 1,
       maxRepeats: 5,
-      prescriptionPendingCancellation: false,
-      itemsPendingCancellation: false
+      pendingCancellation: false
     },
     {
       prescriptionId: "209E3D-A83008-327F9F",
@@ -227,8 +219,7 @@ const mockSearchResponse: SearchResponse = {
       prescriptionTreatmentType: TreatmentType.ACUTE,
       issueNumber: 2,
       maxRepeats: 3,
-      prescriptionPendingCancellation: false,
-      itemsPendingCancellation: false
+      pendingCancellation: false
     },
     {
       prescriptionId: "RX003",
@@ -238,8 +229,7 @@ const mockSearchResponse: SearchResponse = {
       prescriptionTreatmentType: TreatmentType.ERD,
       issueNumber: 3,
       maxRepeats: 4,
-      prescriptionPendingCancellation: false,
-      itemsPendingCancellation: true
+      pendingCancellation: false
     }
   ],
   pastPrescriptions: [
@@ -251,8 +241,7 @@ const mockSearchResponse: SearchResponse = {
       prescriptionTreatmentType: TreatmentType.REPEAT,
       issueNumber: 1,
       maxRepeats: 2,
-      prescriptionPendingCancellation: false,
-      itemsPendingCancellation: false
+      pendingCancellation: false
     },
     {
       prescriptionId: "RX005",
@@ -262,8 +251,7 @@ const mockSearchResponse: SearchResponse = {
       prescriptionTreatmentType: TreatmentType.ACUTE,
       issueNumber: 1,
       maxRepeats: 1,
-      prescriptionPendingCancellation: false,
-      itemsPendingCancellation: false
+      pendingCancellation: false
     }
   ],
   futurePrescriptions: [
@@ -275,8 +263,7 @@ const mockSearchResponse: SearchResponse = {
       prescriptionTreatmentType: TreatmentType.REPEAT,
       issueNumber: 1,
       maxRepeats: 10,
-      prescriptionPendingCancellation: false,
-      itemsPendingCancellation: false
+      pendingCancellation: false
     }
   ]
 }

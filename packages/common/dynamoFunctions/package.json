@@ -9,12 +9,11 @@
     "unit": "POWERTOOLS_DEV=true NODE_OPTIONS=--experimental-vm-modules jest --no-cache --coverage",
     "lint": "eslint  --max-warnings 0 --fix --config ../../../eslint.config.mjs .",
     "compile": "tsc --build",
-    "test": "npm run compile && npm run unit",
-    "check-licenses": "license-checker --failOn GPL --failOn LGPL --start ../.."
+    "test": "npm run compile && npm run unit"
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "^2.32.0",
-    "@aws-sdk/lib-dynamodb": "^3.1016.0",
+    "@aws-sdk/lib-dynamodb": "^3.1029.0",
     "@cpt-ui-common/common-types": "^1.0.0"
   }
 }
