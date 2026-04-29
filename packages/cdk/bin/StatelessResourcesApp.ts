@@ -3,6 +3,7 @@ import {AwsSolutionsChecks} from "cdk-nag"
 
 import {StatelessResourcesStack} from "../stacks/StatelessResourcesStack"
 import fs from "fs"
+import {FrontDoorStack} from "../stacks/FrontDoorStack"
 
 // read the config in
 const configFileName = process.env["CONFIG_FILE_NAME"]
@@ -30,7 +31,7 @@ Tags.of(app).add("cdkApp", "StatelessApp")
 Tags.of(app).add("repo", "eps-prescription-tracker-ui")
 Tags.of(app).add("cfnDriftDetectionGroup", cfnDriftDetectionGroup)
 
-new StatelessResourcesStack(app, "StatelessStack", {
+const statelessResources = new StatelessResourcesStack(app, "StatelessStack", {
   env: {
     region: "eu-west-2"
   },
@@ -38,4 +39,12 @@ new StatelessResourcesStack(app, "StatelessStack", {
   stackName: `${serviceName}-stateless-resources`,
   version: version,
   commit: commit
+})
+
+new FrontDoorStack(app, "FrontDoorStack", {
+  env: {
+    region: "eu-west-2"
+  },
+  stackName: `${serviceName}-front-door`,
+  cloudfrontDistribution: statelessResources.cloudfrontDistribution
 })

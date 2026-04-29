@@ -1,4 +1,3 @@
-import {RemovalPolicy} from "aws-cdk-lib"
 import {ICertificate} from "aws-cdk-lib/aws-certificatemanager"
 import {
   BehaviorOptions,
@@ -8,13 +7,6 @@ import {
   SecurityPolicyProtocol,
   SSLMethod
 } from "aws-cdk-lib/aws-cloudfront"
-import {
-  AaaaRecord,
-  ARecord,
-  IHostedZone,
-  RecordTarget
-} from "aws-cdk-lib/aws-route53"
-import {CloudFrontTarget} from "aws-cdk-lib/aws-route53-targets"
 import {Construct} from "constructs"
 
 /**
@@ -28,8 +20,6 @@ export interface CloudfrontDistributionProps {
   readonly defaultBehavior: BehaviorOptions,
   readonly additionalBehaviors: Record<string, BehaviorOptions>
   readonly errorResponses: Array<ErrorResponse>
-  readonly hostedZone: IHostedZone
-  readonly shortCloudfrontDomain: string
   readonly fullCloudfrontDomain: string
   readonly cloudfrontCert: ICertificate
   readonly webAclAttributeArn: string
@@ -66,30 +56,6 @@ export class CloudfrontDistribution extends Construct {
       },
       webAclId: props.webAclAttributeArn
     })
-
-    if (props.shortCloudfrontDomain === "APEX_DOMAIN") {
-      new ARecord(this, "CloudFrontAliasIpv4Record", {
-        zone: props.hostedZone,
-        target: RecordTarget.fromAlias(new CloudFrontTarget(cloudfrontDistribution))})
-        .applyRemovalPolicy(RemovalPolicy.RETAIN)
-
-      new AaaaRecord(this, "CloudFrontAliasIpv6Record", {
-        zone: props.hostedZone,
-        target: RecordTarget.fromAlias(new CloudFrontTarget(cloudfrontDistribution))})
-        .applyRemovalPolicy(RemovalPolicy.RETAIN)
-    } else {
-      new ARecord(this, "CloudFrontAliasIpv4Record", {
-        zone: props.hostedZone,
-        recordName: props.shortCloudfrontDomain,
-        target: RecordTarget.fromAlias(new CloudFrontTarget(cloudfrontDistribution))})
-        .applyRemovalPolicy(RemovalPolicy.RETAIN)
-
-      new AaaaRecord(this, "CloudFrontAliasIpv6Record", {
-        zone: props.hostedZone,
-        recordName: props.shortCloudfrontDomain,
-        target: RecordTarget.fromAlias(new CloudFrontTarget(cloudfrontDistribution))})
-        .applyRemovalPolicy(RemovalPolicy.RETAIN)
-    }
 
     // Outputs
     this.distribution = cloudfrontDistribution
