@@ -49,6 +49,8 @@ export class CloudfrontBehaviors extends Construct{
 
     // Resources
 
+    // Ensure the top-level function that will utilise the KVS has a dependency
+    // This prevents Cloudfront function creation failure
     const keyValueStore = new KeyValueStore(this, "FunctionsStore", {
       comment: `${props.serviceName}-KeyValueStore`,
       source: ImportSource.fromInline(JSON.stringify({data: [
@@ -93,6 +95,8 @@ export class CloudfrontBehaviors extends Construct{
         }
       ]
     })
+    // Ensure KVS is created before functions that depends on it
+    s3404UriRewriteFunction.node.addDependency(keyValueStore)
 
     const s3404ModifyStatusCodeFunction = new CloudfrontFunction(this, "S3404ModifyStatusCodeFunction", {
       functionName: `${props.serviceName}-S3404ModifyStatusCodeFunction`,
