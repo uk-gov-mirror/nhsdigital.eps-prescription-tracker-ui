@@ -7,7 +7,6 @@ import {
 } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import React from "react"
-import {MemoryRouter} from "react-router-dom"
 import {SessionTimeoutModal} from "@/components/SessionTimeoutModal"
 import {FRONTEND_PATHS} from "@/constants/environment"
 import {SESSION_TIMEOUT_MODAL_STRINGS} from "@/constants/ui-strings/SessionTimeoutModalStrings"
@@ -113,15 +112,6 @@ const defaultProps = {
   buttonDisabledState: false,
   isSelectYourRolePath: false
 }
-
-const renderWithRouter = (
-  ui: React.ReactElement,
-  initialEntries = ["/"]
-) => render(
-  <MemoryRouter initialEntries={initialEntries}>
-    {ui}
-  </MemoryRouter>
-)
 
 describe("SessionTimeoutModal", () => {
   beforeEach(() => {
@@ -312,7 +302,7 @@ describe("SessionTimeoutModal", () => {
       const mockPreventDefault = jest.fn()
       const mockStopPropagation = jest.fn()
 
-      renderWithRouter(<SessionTimeoutModal {...defaultProps} />)
+      render(<SessionTimeoutModal {...defaultProps} />)
 
       const buttonGroup = screen.getByRole("button", {name: SESSION_TIMEOUT_MODAL_STRINGS.STAY_LOGGED_IN})
         .closest(".eps-modal-button-group")
