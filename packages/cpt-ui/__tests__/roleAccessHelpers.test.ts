@@ -19,8 +19,10 @@ const mockAuthContext = (overrides: Partial<AuthContextType> = {}): AuthContextT
   remainingSessionTime: undefined,
   logoutMarker: undefined,
   sessionTimeoutModalInfo: {
-    isOpen: false,
-    remainingTime: 0
+    showModal: false,
+    sessionEndTime: undefined,
+    buttonDisabled: false,
+    action: undefined
   },
   logoutModalType: undefined,
   setSessionTimeoutModalInfo: jest.fn(),
@@ -54,10 +56,10 @@ const mockRole2: RoleDetails = {
 }
 
 describe("hasSelectedRoleAccess", () => {
-  describe("when selectedRole is null/undefined", () => {
+  describe("when selectedRole is undefined or a malformed runtime value", () => {
     it("returns false when selectedRole is null", () => {
       const auth = mockAuthContext({
-        selectedRole: null,
+        selectedRole: null as unknown as AuthContextType["selectedRole"],
         rolesWithAccess: [mockRole1]
       })
 

@@ -1,4 +1,4 @@
-import {AuthContextType} from "@/context/AuthProvider"
+import type {AuthContextType} from "@/context/AuthProvider"
 
 export const hasSelectedRoleAccess = (auth: AuthContextType): boolean => {
   if (!auth.selectedRole?.role_id) {
