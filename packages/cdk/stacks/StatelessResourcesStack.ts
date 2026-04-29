@@ -34,7 +34,6 @@ import {Stream} from "aws-cdk-lib/aws-kinesis"
 import {RestApiGatewayMethods} from "../resources/RestApiGateway/RestApiGatewayMethods"
 import {OAuth2ApiGatewayMethods} from "../resources/RestApiGateway/OAuth2ApiGatewayMethods"
 import {CloudfrontBehaviors} from "../resources/CloudfrontBehaviors"
-import {HostedZone} from "aws-cdk-lib/aws-route53"
 import {Certificate} from "aws-cdk-lib/aws-certificatemanager"
 import {WebACL} from "../resources/WebApplicationFirewall"
 import {CfnWebACLAssociation} from "aws-cdk-lib/aws-wafv2"
@@ -53,15 +52,14 @@ export interface StatelessResourcesStackProps extends StackProps {
  */
 
 export class StatelessResourcesStack extends Stack {
+  public readonly cloudfrontDistribution: CloudfrontDistribution
+
   public constructor(scope: App, id: string, props: StatelessResourcesStackProps) {
     super(scope, id, props)
 
     // Context
     /* context values passed as --context cli arguments are passed as strings so coerce them to expected types*/
-    const epsDomainName: string = this.node.tryGetContext("epsDomainName")
-    const epsHostedZoneId: string = this.node.tryGetContext("epsHostedZoneId")
     const cloudfrontCertArn: string = this.node.tryGetContext("cloudfrontCertArn")
-    const shortCloudfrontDomain: string = this.node.tryGetContext("shortCloudfrontDomain")
     const fullCloudfrontDomain: string = this.node.tryGetContext("fullCloudfrontDomain")
     const fullCognitoDomain: string = this.node.tryGetContext("fullCognitoDomain")
     const logRetentionInDays: number = Number(this.node.tryGetContext("logRetentionInDays"))
@@ -199,10 +197,6 @@ export class StatelessResourcesStack extends Stack {
     const splunkSubscriptionFilterRole = Role.fromRoleArn(
       this, "splunkSubscriptionFilterRole", splunkSubscriptionFilterRoleImport)
 
-    const hostedZone = HostedZone.fromHostedZoneAttributes(this, "hostedZone", {
-      hostedZoneId: epsHostedZoneId,
-      zoneName: epsDomainName
-    })
     const cloudfrontCert = Certificate.fromCertificateArn(this, "CloudfrontCert", cloudfrontCertArn)
     const deploymentRole = Role.fromRoleArn(this, "deploymentRole", deploymentRoleImport)
 
@@ -477,12 +471,10 @@ export class StatelessResourcesStack extends Stack {
     })
 
     // --- Distribution
-    const cloudfrontDistribution = new CloudfrontDistribution(this, "CloudfrontDistribution", {
+    this.cloudfrontDistribution = new CloudfrontDistribution(this, "CloudfrontDistribution", {
       serviceName: props.serviceName,
       stackName: props.stackName,
-      hostedZone: hostedZone,
       cloudfrontCert: cloudfrontCert,
-      shortCloudfrontDomain: shortCloudfrontDomain,
       fullCloudfrontDomain: fullCloudfrontDomain,
       defaultBehavior: {
         origin: staticContentBucketOrigin,
@@ -517,11 +509,11 @@ export class StatelessResourcesStack extends Stack {
 
     // Exports
     new CfnOutput(this, "CloudfrontDistributionId", {
-      value: cloudfrontDistribution.distribution.distributionId,
+      value: this.cloudfrontDistribution.distribution.distributionId,
       exportName: `${props.stackName}:cloudfrontDistribution:Id`
     })
     new CfnOutput(this, "CloudfrontDistributionArn", {
-      value: cloudfrontDistribution.distribution.distributionArn,
+      value: this.cloudfrontDistribution.distribution.distributionArn,
       exportName: `${props.stackName}:cloudfrontDistribution:Arn`
     })
     new CfnOutput(this, "KeyValueStoreArn", {
