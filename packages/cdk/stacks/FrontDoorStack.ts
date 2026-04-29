@@ -31,24 +31,28 @@ export class FrontDoorStack extends Stack {
       zoneName: epsDomainName
     })
 
+    const target = RecordTarget.fromAlias(new CloudFrontTarget(props.cloudfrontDistribution.distribution))
+
     if (props.useZoneApex) {
       new ARecord(this, "CloudFrontAliasIpv4Record", {
         zone: hostedZone,
-        target: RecordTarget.fromAlias(new CloudFrontTarget(props.cloudfrontDistribution.distribution))})
-
+        target
+      })
       new AaaaRecord(this, "CloudFrontAliasIpv6Record", {
         zone: hostedZone,
-        target: RecordTarget.fromAlias(new CloudFrontTarget(props.cloudfrontDistribution.distribution))})
+        target
+      })
     } else {
       new ARecord(this, "CloudFrontAliasIpv4Record", {
         zone: hostedZone,
         recordName: props.serviceName,
-        target: RecordTarget.fromAlias(new CloudFrontTarget(props.cloudfrontDistribution.distribution))})
-
+        target
+      })
       new AaaaRecord(this, "CloudFrontAliasIpv6Record", {
         zone: hostedZone,
         recordName: props.serviceName,
-        target: RecordTarget.fromAlias(new CloudFrontTarget(props.cloudfrontDistribution.distribution))})
+        target
+      })
     }
   }
 }
