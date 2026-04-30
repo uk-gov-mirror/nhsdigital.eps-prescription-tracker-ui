@@ -22,7 +22,6 @@ interface SessionTimeoutModalProps {
   onLogOut: () => Promise<void>
   onTimeOut: () => Promise<void>
   buttonDisabledState: boolean
-  isSelectYourRolePath: boolean
 }
 
 // Helper functions moved outside component to reduce cognitive complexity
@@ -118,17 +117,15 @@ export const SessionTimeoutModal: React.FC<SessionTimeoutModalProps> = ({
   onStayLoggedIn,
   onLogOut,
   onTimeOut,
-  buttonDisabledState,
-  isSelectYourRolePath
+  buttonDisabledState
 }) => {
   const liveRegionRef = useRef<HTMLSpanElement>(null)
   const auth = useAuth()
+  const path = normalizePath(useLocation().pathname)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, forceUpdate] = useState(0)
-  const location = useLocation()
-  const path = normalizePath(location.pathname)
-  const isSessionSelectionPath = (path === FRONTEND_PATHS.SESSION_SELECTION)
-  const isSpecialPath = isSelectYourRolePath || isSessionSelectionPath
+  const isSpecialPath = path.includes(FRONTEND_PATHS.SELECT_YOUR_ROLE)
+  || path.includes(FRONTEND_PATHS.SESSION_SELECTION)
   const countdownTimerRef = useRef<number | null>(null)
 
   // Calculate remaining time from sessionEndTime
