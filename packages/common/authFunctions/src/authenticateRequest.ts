@@ -121,7 +121,7 @@ const refreshTokenFlow = async (
   return refreshResult
 }
 
-const fifteenMinutes = 5 * 60 * 1000
+const fifteenMinutes = 15 * 60 * 1000
 
 /**
  * Authenticates a request and handles the entire authentication flow including token refresh.
