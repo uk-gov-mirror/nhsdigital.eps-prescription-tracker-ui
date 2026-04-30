@@ -10,6 +10,7 @@ import {
   Route
 } from "react-router-dom"
 
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import NhsNumSearch from "@/components/prescriptionSearch/NhsNumSearch"
 import {STRINGS} from "@/constants/ui-strings/NhsNumSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
@@ -28,6 +29,10 @@ const mockNavigationContext = {
   getRelevantSearchParameters: jest.fn(),
   startNewNavigationSession: jest.fn()
 }
+
+jest.mock("@/helpers/searchLogging", () => ({
+  logSearchSubmitted: jest.fn()
+}))
 
 jest.mock("@/context/NavigationProvider", () => ({
   ...jest.requireActual("@/context/NavigationProvider"),
@@ -153,6 +158,73 @@ describe("NhsNumSearch", () => {
     await userEvent.click(screen.getByTestId("find-patient-button"))
 
     expect(mockNavigate).toHaveBeenCalledWith(FRONTEND_PATHS.PRESCRIPTION_LIST_CURRENT)
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "NHS Number"
+    )
+  })
+
+  it("logs user details and org info when available", async () => {
+    const mockNavigate = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(mockNavigate)
+
+    const authStateWithDetails = {
+      ...signedInAuthState,
+      userDetails: {
+        sub: "user-123",
+        email: "user@example.com",
+        name: "Test User",
+        family_name: "User",
+        given_name: "Test"
+      },
+      selectedRole: {
+        org_code: "ORG001",
+        org_name: "Test Organisation",
+        user_id: "user-123",
+        role_id: "ROLE123",
+        users_role_id: "UR123"
+      }
+    }
+
+    const renderWithCustomAuth = (ui: React.ReactElement) =>
+      render(
+        <AuthContext.Provider value={authStateWithDetails}>
+          <SearchContext.Provider value={defaultSearchState}>
+            <MemoryRouter initialEntries={["/search"]}>
+              <NavigationProvider>
+                <Routes>
+                  <Route path="/search" element={ui} />
+                  <Route path="*" element={<div />} />
+                </Routes>
+              </NavigationProvider>
+            </MemoryRouter>
+          </SearchContext.Provider>
+        </AuthContext.Provider>
+      )
+
+    renderWithCustomAuth(<NhsNumSearch />)
+
+    await userEvent.type(screen.getByTestId("nhs-number-input"), "9233739112")
+    await userEvent.click(screen.getByTestId("find-patient-button"))
+
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: "test-session-id",
+        userDetails: expect.objectContaining({sub: "user-123"}),
+        selectedRole: expect.objectContaining({org_code: "ORG001", org_name: "Test Organisation"})
+      }),
+      "NHS Number"
+    )
+  })
+
+  // We expect it to log as soon as submit is triggered, even if validation fails
+  it("logs when validation fails", async () => {
+    renderWithRouter(<NhsNumSearch />)
+    await userEvent.click(screen.getByTestId("find-patient-button"))
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "NHS Number"
+    )
   })
 
   it("renders label, hint, and submit button", () => {

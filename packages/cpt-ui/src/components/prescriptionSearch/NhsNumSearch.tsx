@@ -18,6 +18,7 @@ import {
 
 import {STRINGS} from "@/constants/ui-strings/NhsNumSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {validateNhsNumber, normalizeNhsNumber, NhsNumberValidationError} from "@/helpers/validateNhsNumber"
@@ -67,6 +68,9 @@ export default function NhsNumSearch() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    logSearchSubmitted(authContext, "NHS Number")
+
     const validationErrors = validateNhsNumber(nhsNumber)
 
     if (validationErrors.length > 0) {

@@ -24,6 +24,7 @@ import {
   normalizePrescriptionId,
   PrescriptionValidationError
 } from "@/helpers/validatePrescriptionDetailsSearch"
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {usePageTitle} from "@/hooks/usePageTitle"
@@ -74,6 +75,9 @@ export default function PrescriptionIdSearch() {
   // Form submit handler
   const handlePrescriptionDetails = (e: React.FormEvent) => {
     e.preventDefault()
+
+    logSearchSubmitted(authContext, "Prescription ID")
+
     const validationErrors = validatePrescriptionId(prescriptionId)
 
     if (validationErrors.length > 0) {

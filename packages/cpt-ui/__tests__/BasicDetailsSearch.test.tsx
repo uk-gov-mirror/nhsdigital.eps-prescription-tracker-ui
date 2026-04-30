@@ -15,6 +15,7 @@ import {
   Route
 } from "react-router-dom"
 
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import BasicDetailsSearch from "@/components/prescriptionSearch/BasicDetailsSearch"
 import {BasicDetailsSearchType} from "@cpt-ui-common/common-types"
 import {STRINGS} from "@/constants/ui-strings/BasicDetailsSearchStrings"
@@ -23,6 +24,10 @@ import {AuthContext, AuthContextType} from "@/context/AuthProvider"
 import {SearchContext, SearchProviderContextType} from "@/context/SearchProvider"
 import {NavigationProvider} from "@/context/NavigationProvider"
 import {mockAuthState} from "./mocks/AuthStateMock"
+
+jest.mock("@/helpers/searchLogging", () => ({
+  logSearchSubmitted: jest.fn()
+}))
 
 jest.mock("react-router-dom", () => {
   const actual = jest.requireActual("react-router-dom")
@@ -199,7 +204,91 @@ describe("BasicDetailsSearch", () => {
       expect(mockSetDobMonth).toHaveBeenCalledWith(formData.dobMonth)
       expect(mockSetDobYear).toHaveBeenCalledWith(formData.dobYear)
       expect(mockSetPostcode).toHaveBeenCalledWith(formData.postcode)
+      expect(logSearchSubmitted).toHaveBeenCalledWith(
+        expect.objectContaining({sessionId: "test-session-id"}),
+        "Basic Details"
+      )
     })
+  })
+
+  it("logs user details and org info when available", async () => {
+    const mockNavigate = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(mockNavigate)
+
+    const authStateWithDetails = {
+      ...signedInAuthState,
+      userDetails: {
+        sub: "user-123",
+        email: "user@example.com",
+        name: "Test User",
+        family_name: "User",
+        given_name: "Test"
+      },
+      selectedRole: {
+        org_code: "ORG001",
+        org_name: "Test Organisation",
+        user_id: "user-123",
+        role_id: "ROLE123",
+        users_role_id: "UR123"
+      }
+    }
+
+    const renderWithCustomAuth = (ui: React.ReactElement) =>
+      render(
+        <AuthContext.Provider value={authStateWithDetails}>
+          <SearchContext.Provider value={defaultSearchState}>
+            <MemoryRouter initialEntries={["/search"]}>
+              <NavigationProvider>
+                <Routes>
+                  <Route path="/search" element={ui} />
+                  <Route path="*" element={<LocationDisplay />} />
+                </Routes>
+              </NavigationProvider>
+            </MemoryRouter>
+          </SearchContext.Provider>
+        </AuthContext.Provider>
+      )
+
+    renderWithCustomAuth(<BasicDetailsSearch />)
+
+    const formData = {
+      firstName: "",
+      lastName: "Smith",
+      dobDay: "01",
+      dobMonth: "01",
+      dobYear: "2000",
+      postcode: "LS6 1JL"
+    }
+
+    await fillForm(formData)
+    await submitForm()
+
+    await waitFor(() => {
+      expect(logSearchSubmitted).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sessionId: "test-session-id",
+          userDetails: expect.objectContaining({sub: "user-123"}),
+          selectedRole: expect.objectContaining({org_code: "ORG001", org_name: "Test Organisation"})
+        }),
+        "Basic Details"
+      )
+    })
+  })
+
+  it("logs when validation fails", async () => {
+    const mockNavigate = jest.fn();
+    (useNavigate as jest.Mock).mockReturnValue(mockNavigate)
+
+    renderWithRouter(<BasicDetailsSearch />, defaultSearchState)
+
+    // Submit form with missing required fields
+    await submitForm()
+
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "Basic Details"
+    )
+    expect(mockNavigate).not.toHaveBeenCalled()
   })
 
   const testCases = [
