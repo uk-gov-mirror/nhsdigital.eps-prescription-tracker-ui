@@ -163,27 +163,21 @@ describe("SessionTimeoutModal", () => {
       expect(screen.getByTestId("logout-button")).toBeInTheDocument()
     })
 
-    // it("shows the select role instruction and close button text on the select your role path", () => {
-    //   render(<SessionTimeoutModal {...defaultProps} path={FRONTEND_PATHS.SELECT_YOUR_ROLE} />)
+    it("shows the select role instruction and close button text on the select your role path", () => {
+      mockUseLocation.mockReturnValue({
+        pathname: FRONTEND_PATHS.SELECT_YOUR_ROLE
+      })
+      mockNormalizePath.mockReturnValue(FRONTEND_PATHS.SELECT_YOUR_ROLE)
 
-    //   expect(
-    //     screen.getByText(SESSION_TIMEOUT_MODAL_STRINGS.SELECT_YOUR_ROLE_INSTRUCTION)
-    //   ).toBeInTheDocument()
-    //   expect(
-    //     screen.getByRole("button", {name: SESSION_TIMEOUT_MODAL_STRINGS.CLOSE_MESSAGE})
-    //   ).toBeInTheDocument()
-    // })
+      render(<SessionTimeoutModal {...defaultProps} />)
 
-    // it("shows the select role instruction and close button text on the concurrent session selection path", () => {
-    //   render(<SessionTimeoutModal {...defaultProps} path={FRONTEND_PATHS.SESSION_SELECTION} />)
-
-    //   expect(
-    //     screen.getByText(SESSION_TIMEOUT_MODAL_STRINGS.SELECT_YOUR_ROLE_INSTRUCTION)
-    //   ).toBeInTheDocument()
-    //   expect(
-    //     screen.getByRole("button", {name: SESSION_TIMEOUT_MODAL_STRINGS.CLOSE_MESSAGE})
-    //   ).toBeInTheDocument()
-    // })
+      expect(
+        screen.getByText(SESSION_TIMEOUT_MODAL_STRINGS.SELECT_YOUR_ROLE_INSTRUCTION)
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", {name: SESSION_TIMEOUT_MODAL_STRINGS.CLOSE_MESSAGE})
+      ).toBeInTheDocument()
+    })
 
     it("shows the select role instruction and close button text on the session selection path", () => {
       // Mock the location to be on session selection path
