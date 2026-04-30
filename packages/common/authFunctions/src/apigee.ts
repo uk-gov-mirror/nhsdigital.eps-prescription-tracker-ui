@@ -14,7 +14,6 @@ export function buildApigeeHeaders(apigeeAccessToken: string, roleId: string, or
     "nhsd-session-urid": roleId,
     "x-request-id": crypto.randomUUID(),
     "nhsd-session-jobrole": roleId,
-    "nhsd-identity-uuid": roleId, //TODO potentially remove this line
     "nhsd-organization-uuid": orgCode,
     "x-correlation-id": correlationId
   }

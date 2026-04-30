@@ -47,7 +47,6 @@ describe("apigeeUtils", () => {
         Authorization: `Bearer ${apigeeAccessToken}`,
         "nhsd-session-urid": roleId,
         "nhsd-organization-uuid": orgCode,
-        "nhsd-identity-uuid": roleId,
         "nhsd-session-jobrole": roleId,
         "x-correlation-id": correlationId,
         "x-request-id": "test-uuid-in-uuid-format"
