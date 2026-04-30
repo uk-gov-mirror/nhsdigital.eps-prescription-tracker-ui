@@ -40,7 +40,6 @@ export const getPrescriptions = async (
         "nhsd-session-urid": roleId,
         "x-request-id": crypto.randomUUID(),
         "nhsd-session-jobrole": roleId,
-        "nhsd-identity-uuid": roleId,
         "nhsd-organization-uuid": orgCode,
         "x-correlation-id": correlationId
       }
