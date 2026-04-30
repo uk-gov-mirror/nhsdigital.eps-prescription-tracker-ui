@@ -21,6 +21,7 @@ import {validateBasicDetails, getInlineErrors} from "@/helpers/validateBasicDeta
 import {errorFocusMap, ErrorKey, resolveDobInvalidFields} from "@/helpers/basicDetailsValidationMeta"
 import {STRINGS} from "@/constants/ui-strings/BasicDetailsSearchStrings"
 import {FRONTEND_PATHS} from "@/constants/environment"
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import {useSearchContext} from "@/context/SearchProvider"
 import {useNavigationContext} from "@/context/NavigationProvider"
 import {usePageTitle} from "@/hooks/usePageTitle"
@@ -42,6 +43,7 @@ export default function BasicDetailsSearch() {
   const [dobErrorFields, setDobErrorFields] = useState<Array<"day" | "month" | "year">>([])
 
   const inlineErrors = getInlineErrors(errors)
+  const auth = useAuth()
   const searchContext = useSearchContext()
   const navigationContext = useNavigationContext()
 
@@ -111,6 +113,8 @@ export default function BasicDetailsSearch() {
   // Performs validation, sends API request, handles errors, and navigates appropriately
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    logSearchSubmitted(auth, "Basic Details")
 
     // Run validation and collect any error keys
     const validationErrors = validateBasicDetails({

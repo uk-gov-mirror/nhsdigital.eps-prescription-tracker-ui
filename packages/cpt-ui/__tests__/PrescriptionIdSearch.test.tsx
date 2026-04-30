@@ -10,6 +10,7 @@ import {
 } from "react-router-dom"
 
 import {FRONTEND_PATHS} from "@/constants/environment"
+import {logSearchSubmitted} from "@/helpers/searchLogging"
 import PrescriptionIdSearch from "@/components/prescriptionSearch/PrescriptionIdSearch"
 import {PRESCRIPTION_ID_SEARCH_STRINGS} from "@/constants/ui-strings/SearchForAPrescriptionStrings"
 import {AuthContext, AuthContextType} from "@/context/AuthProvider"
@@ -28,6 +29,10 @@ const mockNavigationContext = {
   startNewNavigationSession: jest.fn()
 }
 
+jest.mock("@/helpers/searchLogging", () => ({
+  logSearchSubmitted: jest.fn()
+}))
+
 jest.mock("@/context/NavigationProvider", () => ({
   ...jest.requireActual("@/context/NavigationProvider"),
   useNavigationContext: () => mockNavigationContext
@@ -45,7 +50,7 @@ const mockAuthContext: AuthContextType = {
   selectedRole: undefined,
   userDetails: undefined,
   isConcurrentSession: false,
-  sessionId: undefined,
+  sessionId: "test-session-id",
   cognitoSignIn: jest.fn(),
   cognitoSignOut: jest.fn(),
   clearAuthState: jest.fn(),
@@ -146,6 +151,72 @@ describe("PrescriptionIdSearch", () => {
     await setup("c0c757a83008c2d93o")
     const location = await screen.findByTestId("location-display")
     expect(location).toHaveTextContent(FRONTEND_PATHS.PRESCRIPTION_LIST_CURRENT)
+  })
+
+  it("logs a Prescription ID search when the form is submitted", async () => {
+    await setup("c0c757a83008c2d93o")
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "Prescription ID"
+    )
+  })
+
+  it("logs user details and org info when available", async () => {
+    const authStateWithDetails = {
+      ...mockAuthContext,
+      userDetails: {
+        sub: "user-123",
+        email: "user@example.com",
+        name: "Test User",
+        family_name: "User",
+        given_name: "Test"
+      },
+      selectedRole: {
+        org_code: "ORG001",
+        org_name: "Test Organisation",
+        user_id: "user-123",
+        role_id: "ROLE123",
+        users_role_id: "UR123"
+      }
+    }
+
+    const renderWithCustomAuth = () =>
+      render(
+        <MemoryRouter initialEntries={["/search"]}>
+          <AuthContext.Provider value={authStateWithDetails}>
+            <SearchContext.Provider value={defaultSearchState}>
+              <NavigationProvider>
+                <Routes>
+                  <Route path="/search" element={<PrescriptionIdSearch />} />
+                  <Route path="*" element={<div />} />
+                </Routes>
+              </NavigationProvider>
+            </SearchContext.Provider>
+          </AuthContext.Provider>
+        </MemoryRouter>
+      )
+
+    renderWithCustomAuth()
+    const inputEl = screen.getByTestId("prescription-id-input")
+    await userEvent.type(inputEl, "c0c757a83008c2d93o")
+    await userEvent.click(screen.getByTestId("find-prescription-button"))
+
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sessionId: "test-session-id",
+        userDetails: expect.objectContaining({sub: "user-123"}),
+        selectedRole: expect.objectContaining({org_code: "ORG001", org_name: "Test Organisation"})
+      }),
+      "Prescription ID"
+    )
+  })
+
+  it("logs when validation fails", async () => {
+    await setup("") // Empty input fails validation
+    expect(logSearchSubmitted).toHaveBeenCalledWith(
+      expect.objectContaining({sessionId: "test-session-id"}),
+      "Prescription ID"
+    )
   })
 
   describe.each([
