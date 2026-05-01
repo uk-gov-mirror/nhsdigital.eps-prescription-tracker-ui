@@ -52,15 +52,23 @@ http.interceptors.request.use(
       logger.error("Could not get session id from storage", error)
     }
 
-    const authSession = await fetchAuthSession()
-    const idToken = authSession.tokens?.idToken
     const isAmplifyHostRequest = config.url?.includes("/api/cis2-signout") ?? false
+
+    let idToken: string | undefined
+    try {
+      const authSession = await fetchAuthSession()
+      idToken = authSession.tokens?.idToken?.toString()
+    } catch (error) {
+      logger.warn("Could not fetch auth session", error)
+      idToken = undefined
+    }
+
     if (idToken === undefined && !isAmplifyHostRequest) {
       controller.abort()
       throw new Error("Could not get a cognito token")
     }
     if (idToken) {
-      config.headers.Authorization = `Bearer ${idToken.toString()}`
+      config.headers.Authorization = `Bearer ${idToken}`
     }
 
     // Make sure we have a retry counter in headers so we can track how many times we've retried

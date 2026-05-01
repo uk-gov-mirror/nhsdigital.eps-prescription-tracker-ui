@@ -149,6 +149,25 @@ describe("HTTP Axios Instance", () => {
     expect(response.data).toEqual({success: true})
   })
 
+  it("does not abort when request targets CIS2 signout endpoint and fetchAuthSession throws", async () => {
+    (fetchAuthSession as jest.Mock)
+      .mockRejectedValueOnce(new Error("Session expired"))
+    mock.onGet("/api/cis2-signout").reply(200, {success: true})
+
+    const response = await http.get("/api/cis2-signout")
+
+    expect(response.status).toBe(200)
+    expect(response.data).toEqual({success: true})
+  })
+
+  it("fails if fetchAuthSession throws for non-CIS2 endpoints", async () => {
+    (fetchAuthSession as jest.Mock)
+      .mockRejectedValueOnce(new Error("Session expired"))
+    mock.onGet("/test").reply(200)
+
+    await expect(http.get("/test")).rejects.toThrow("Could not get a cognito token")
+  })
+
   it("Does not retry if response says to restart login", async () => {
     mock.onGet("/test").reply(401, {restartLogin: true})
 
