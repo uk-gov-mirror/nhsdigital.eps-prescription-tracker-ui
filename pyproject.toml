@@ -23,7 +23,7 @@ requests = "^2.33.1"
 [tool.poetry.scripts]
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^4.5.1"
+pre-commit = "^4.6.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
