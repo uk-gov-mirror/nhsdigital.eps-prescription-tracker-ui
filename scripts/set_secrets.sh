@@ -80,7 +80,7 @@ get_deploy_role() {
     # shellcheck disable=SC2016
     CLOUD_FORMATION_DEPLOY_ROLE=$(aws cloudformation list-exports \
         --profile prescription-"${environment}" \
-        --query 'Exports[?Name==`ci-resources:CloudFormationDeployRole`].Value' \
+        --query 'Exports[?Name==`iam-cdk:IAM:CloudFormationDeployRole:Arn`].Value' \
         --output text)
 
     echo "${CLOUD_FORMATION_DEPLOY_ROLE}"

@@ -138,14 +138,14 @@ fi
 if [ -z "${SPLUNK_DELIVERY_STREAM}" ]; then
     SPLUNK_DELIVERY_STREAM=$(echo "$CF_LONDON_EXPORTS" | \
         jq \
-        --arg EXPORT_NAME "lambda-resources:SplunkDeliveryStream" \
+        --arg EXPORT_NAME "account-resources-cdk-uk:Firehose:SplunkDeliveryStream:Arn" \
         -r '.Exports[] | select(.Name == $EXPORT_NAME) | .Value')
 fi
 
 if [ -z "${SPLUNK_SUBSCRIPTION_FILTER_ROLE}" ]; then
     SPLUNK_SUBSCRIPTION_FILTER_ROLE=$(echo "$CF_LONDON_EXPORTS" | \
         jq \
-        --arg EXPORT_NAME "lambda-resources:SplunkSubscriptionFilterRole" \
+        --arg EXPORT_NAME "account-resources-cdk-uk:IAM:SplunkSubscriptionFilterRole:Arn" \
         -r '.Exports[] | select(.Name == $EXPORT_NAME) | .Value')
 fi
 if [ -z "${CLOUDFRONT_DISTRIBUTION_ARN}" ]; then
