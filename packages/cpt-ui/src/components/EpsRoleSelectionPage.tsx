@@ -34,6 +34,7 @@ import {
 } from "./EpsRoleSelectionPage.types"
 import {transformRolesData, logRoleChunks} from "./EpsRoleSelectionPage.utils"
 import {RoleCard} from "./RoleCard"
+import {hasSelectedRoleAccess} from "@/helpers/roleAccessHelpers"
 
 function RoleCardsSection({
   rolesWithAccess,
@@ -362,14 +363,14 @@ function UserInfoSection({
       </h1>
 
       {auth.rolesWithAccess.length === 0 && <p>{captionNoAccess}</p>}
-      {auth.selectedRole && (
+      {hasSelectedRoleAccess(auth) && (
         <section aria-label="Login Information">
           <InsetText data-testid="eps_select_your_role_pre_role_selected">
             <p>
               {insetText.loggedInTemplate
-                .replace("{orgName}", auth.selectedRole.org_name || noOrgName)
-                .replace("{odsCode}", auth.selectedRole.org_code || noODSCode)
-                .replace("{roleName}", auth.selectedRole.role_name || noRoleName)}
+                .replace("{orgName}", auth.selectedRole?.org_name || noOrgName)
+                .replace("{odsCode}", auth.selectedRole?.org_code || noODSCode)
+                .replace("{roleName}", auth.selectedRole?.role_name || noRoleName)}
             </p>
           </InsetText>
           <Button
