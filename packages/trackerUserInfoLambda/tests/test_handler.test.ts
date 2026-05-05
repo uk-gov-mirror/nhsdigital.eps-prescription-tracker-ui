@@ -39,11 +39,20 @@ describe("Lambda Handler Tests with mock disabled", () => {
         isConcurrentSession?: boolean
       }
     }
-  } = {...mockAPIGatewayProxyEvent}
+  }
   let context = {...mockContext}
 
   beforeEach(() => {
     jest.resetAllMocks()
+    // Reset event to clean state before each test
+    event = {
+      ...mockAPIGatewayProxyEvent,
+      requestContext: {
+        ...mockAPIGatewayProxyEvent.requestContext,
+        authorizer: {}
+      }
+    }
+    context = {...mockContext}
   })
 
   it("should return a successful response when cached details returned", async () => {
@@ -115,7 +124,14 @@ describe("Lambda Handler Tests with mock disabled", () => {
     const body = JSON.parse(response.body)
     expect(body).toHaveProperty("message", "UserInfo fetched successfully from the OIDC endpoint")
     expect(body).toHaveProperty("userInfo")
-    expect(mockUpdateTokenMapping).toHaveBeenCalled()
+    expect(mockUpdateTokenMapping).toHaveBeenCalledWith(
+      expect.anything(),
+      "TokenMappingTable",
+      expect.objectContaining({
+        username: "test_user"
+      }),
+      expect.anything()
+    )
   })
 
   it("should return error when a mock token and no apigee access token", async () => {
@@ -191,8 +207,7 @@ describe("Lambda Handler Tests with mock disabled", () => {
         userDetails: {
           family_name: "Doe",
           given_name: "John"
-        },
-        is_concurrent_session: false
+        }
       }
     })
 
@@ -208,8 +223,7 @@ describe("Lambda Handler Tests with mock disabled", () => {
         {role_id: "123", org_code: "XYZ", role_name: "MockRole_1"}
       ],
       "roles_without_access": [],
-      "user_details": {"family_name": "Doe", "given_name": "John"},
-      "is_concurrent_session": false
+      "user_details": {"family_name": "Doe", "given_name": "John"}
     })
   })
 
@@ -226,8 +240,7 @@ describe("Lambda Handler Tests with mock disabled", () => {
         userDetails: {
           family_name: "Doe",
           given_name: "John"
-        },
-        is_concurrent_session: false
+        }
       }
     })
 
@@ -245,8 +258,8 @@ describe("Lambda Handler Tests with mock disabled", () => {
       "roles_without_access": [
         {role_name: "Receptionist", role_id: "456", org_code: "DEF", org_name: "Test Hospital"}
       ],
-      "user_details": {"family_name": "Doe", "given_name": "John"},
-      "is_concurrent_session": false}
+      "user_details": {"family_name": "Doe", "given_name": "John"}
+    }
     )
   })
 
@@ -263,17 +276,22 @@ describe("Lambda Handler Tests with mock disabled", () => {
         userDetails: {
           family_name: "Doe",
           given_name: "John"
-        },
-        is_concurrent_session: false
+        }
       }
     })
+
+    event.requestContext.authorizer = {
+      username: "test_user",
+      isConcurrentSession: false
+    }
+
     const response = await handler(event, context)
 
     expect(response.statusCode).toBe(200)
     expect(response.body).toContain("UserInfo fetched successfully from DynamoDB")
 
     const responseBody = JSON.parse(response.body)
-    expect(responseBody.userInfo).toEqual({
+    expect(responseBody.userInfo).toMatchObject({
       "currently_selected_role":  {},
       "roles_with_access": [
         {role_id: "123", org_code: "XYZ", role_name: "MockRole_1"}
@@ -345,6 +363,10 @@ describe("Lambda Handler Tests with mock disabled", () => {
     when user details returned and token session found with matching ID", async () => {
     const cis2_id = "cis2_id_token"
     const cis2_a_t = "cis2_access_token"
+    // Mock Date.now() to have predictable time calculations
+    const fixedTime = 1000000000000
+    const dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(fixedTime)
+
     mockGetTokenMapping.mockImplementation(() => {
       return {
         userDetails: {
@@ -352,7 +374,8 @@ describe("Lambda Handler Tests with mock disabled", () => {
           given_name: "bar"
         },
         cis2IdToken: cis2_id,
-        cis2AccessToken: cis2_a_t
+        cis2AccessToken: cis2_a_t,
+        lastActivityTime: fixedTime // Set to current time for ~15 min remaining
       }
     })
 
@@ -389,12 +412,20 @@ describe("Lambda Handler Tests with mock disabled", () => {
       expect.anything(),
       {} // oidc
     )
+    expect(mockUpdateTokenMapping).toHaveBeenCalledWith(
+      expect.anything(),
+      "SessionManagementTable",
+      expect.objectContaining({
+        username: "test_user"
+      }),
+      expect.anything()
+    )
     expect(response).toBeDefined()
     expect(response).toHaveProperty("statusCode", 200)
     expect(response).toHaveProperty("body")
 
     const body = JSON.parse(response.body)
-    expect(body.userInfo).toEqual({
+    expect(body.userInfo).toMatchObject({
       "currently_selected_role":  {
         "org_code": "GHI",
         "role_id": "555",
@@ -409,11 +440,131 @@ describe("Lambda Handler Tests with mock disabled", () => {
       "roles_without_access": [],
       "user_details": {"family_name": "foo", "given_name": "bar"},
       "is_concurrent_session": true,
-      "sessionId": "mock-session-id",
-      "remainingSessionTime": 900000
+      "sessionId": "mock-session-id"
     })
+    // remainingSessionTime should be exactly 15 minutes (900000ms) since lastActivityTime = now
+    expect(body.userInfo.remainingSessionTime).toBe(900000)
 
     expect(body).toHaveProperty("message", "UserInfo fetched successfully from the OIDC endpoint")
     expect(body).toHaveProperty("userInfo")
+
+    dateNowSpy.mockRestore()
+  })
+
+  it("should return depreciating remainingSessionTime based on lastActivityTime", async () => {
+    // Mock Date.now() to have predictable time calculations
+    const fixedTime = 1000000000000
+    const fiveMinutesAgo = fixedTime - (5 * 60 * 1000)
+    const tenMinutesExpected = 10 * 60 * 1000
+    const dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(fixedTime)
+
+    mockGetTokenMapping.mockImplementation(() => {
+      return {
+        rolesWithAccess: [
+          {role_id: "123", org_code: "XYZ", role_name: "MockRole_1"}
+        ],
+        rolesWithoutAccess: [],
+        currentlySelectedRole: {role_id: "555", org_code: "GHI", role_name: "MockRole_4"},
+        userDetails: {
+          family_name: "foo",
+          given_name: "bar"
+        },
+        lastActivityTime: fiveMinutesAgo
+      }
+    })
+
+    event.requestContext.authorizer = {
+      username: "test_user",
+      sessionId: "mock-session-id",
+      isConcurrentSession: false
+    }
+
+    const response = await handler(event, context)
+
+    expect(response.statusCode).toBe(200)
+
+    const body = JSON.parse(response.body)
+    expect(body.userInfo.remainingSessionTime).toBeDefined()
+    // Should be exactly 10 minutes since we're using mocked time
+    expect(body.userInfo.remainingSessionTime).toBe(tenMinutesExpected)
+
+    dateNowSpy.mockRestore()
+  })
+
+  it("should return different remainingSessionTime values for different lastActivityTime", async () => {
+    // Mock Date.now() to have predictable time calculations
+    const fixedTime = 2000000000000
+    const twoMinutesAgo = fixedTime - (2 * 60 * 1000)
+    const thirteenMinutesExpected = 13 * 60 * 1000
+    const dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(fixedTime)
+
+    mockGetTokenMapping.mockImplementation(() => {
+      return {
+        rolesWithAccess: [
+          {role_id: "123", org_code: "XYZ", role_name: "MockRole_1"}
+        ],
+        rolesWithoutAccess: [],
+        currentlySelectedRole: {role_id: "555", org_code: "GHI", role_name: "MockRole_4"},
+        userDetails: {
+          family_name: "foo",
+          given_name: "bar"
+        },
+        lastActivityTime: twoMinutesAgo
+      }
+    })
+
+    event.requestContext.authorizer = {
+      username: "test_user",
+      sessionId: "mock-session-id",
+      isConcurrentSession: false
+    }
+
+    const response = await handler(event, context)
+
+    expect(response.statusCode).toBe(200)
+
+    const body = JSON.parse(response.body)
+    expect(body.userInfo.remainingSessionTime).toBeDefined()
+    // Should be exactly 13 minutes since we're using mocked time
+    expect(body.userInfo.remainingSessionTime).toBe(thirteenMinutesExpected)
+
+    dateNowSpy.mockRestore()
+  })
+
+  it("should return 0 remainingSessionTime when lastActivityTime exceeds 15 minutes", async () => {
+    // Mock Date.now() to have predictable time calculations
+    const fixedTime = 3000000000000
+    const sixteenMinutesAgo = fixedTime - (16 * 60 * 1000)
+    const dateNowSpy = jest.spyOn(Date, "now").mockReturnValue(fixedTime)
+
+    mockGetTokenMapping.mockImplementation(() => {
+      return {
+        rolesWithAccess: [
+          {role_id: "123", org_code: "XYZ", role_name: "MockRole_1"}
+        ],
+        rolesWithoutAccess: [],
+        currentlySelectedRole: {role_id: "555", org_code: "GHI", role_name: "MockRole_4"},
+        userDetails: {
+          family_name: "foo",
+          given_name: "bar"
+        },
+        lastActivityTime: sixteenMinutesAgo
+      }
+    })
+
+    event.requestContext.authorizer = {
+      username: "test_user",
+      sessionId: "mock-session-id",
+      isConcurrentSession: false
+    }
+
+    const response = await handler(event, context)
+
+    expect(response.statusCode).toBe(200)
+
+    const body = JSON.parse(response.body)
+    expect(body.userInfo.remainingSessionTime).toBe(0)
+
+    dateNowSpy.mockRestore()
   })
 })

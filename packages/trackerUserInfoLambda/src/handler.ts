@@ -110,6 +110,8 @@ const lambdaHandler = async (event: APIGatewayProxyEventBase<AuthResult>): Promi
     remainingSessionTime: remainingSessionTime
   }
 
+  // On first tracker user info call for CIS2 sessions, we will not have this detail
+  // See below call to fetchUserInfo for first time fetch and store in DynamoDB
   if (
     cachedUserInfo &&
     (cachedUserInfo.roles_with_access.length > 0 || cachedUserInfo.roles_without_access.length > 0)
@@ -141,6 +143,8 @@ const lambdaHandler = async (event: APIGatewayProxyEventBase<AuthResult>): Promi
     }
   }
 
+  // Fetches user information from the OIDC UserInfo endpoint
+  // using either the CIS2 access token or the mock token as appropriate
   const userInfoResponse = await fetchUserInfo(
     tokenDetails?.cis2AccessToken || "",
     tokenDetails?.cis2IdToken || "",
@@ -150,7 +154,8 @@ const lambdaHandler = async (event: APIGatewayProxyEventBase<AuthResult>): Promi
     isMockToken ? mockOidcConfig : cis2OidcConfig
   )
 
-  // Save user info to DynamoDB (but not tokens)
+  // Save new or updated user info to DynamoDB (but not tokens)
+  // This ensures a DynamoDB cache record on further calls
   const item = {
     username,
     rolesWithAccess: userInfoResponse.roles_with_access,
@@ -159,10 +164,13 @@ const lambdaHandler = async (event: APIGatewayProxyEventBase<AuthResult>): Promi
     userDetails: userInfoResponse.user_details,
     lastActivityTime: Date.now()
   }
-  await updateTokenMapping(documentClient, tokenMappingTableName, item, logger)
 
-  // For fresh responses, user just made a request so they have full 15 minutes
-  const freshremainingSessionTime = 15 * 60 * 1000 // Full 15 minutes
+  // Ensure we update the correct session item record with they latest user info
+  if (isConcurrentSession) {
+    await updateTokenMapping(documentClient, sessionManagementTableName, item, logger)
+  } else {
+    await updateTokenMapping(documentClient, tokenMappingTableName, item, logger)
+  }
 
   return {
     statusCode: 200,
@@ -172,7 +180,7 @@ const lambdaHandler = async (event: APIGatewayProxyEventBase<AuthResult>): Promi
         ...userInfoResponse,
         is_concurrent_session: isConcurrentSession,
         sessionId: sessionId,
-        remainingSessionTime: freshremainingSessionTime
+        remainingSessionTime: remainingSessionTime
       }
     })
   }

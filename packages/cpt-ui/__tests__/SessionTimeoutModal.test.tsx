@@ -109,8 +109,7 @@ const defaultProps = {
   onStayLoggedIn: jest.fn(),
   onLogOut: jest.fn(),
   onTimeOut: jest.fn(),
-  buttonDisabledState: false,
-  isSelectYourRolePath: false
+  buttonDisabledState: false
 }
 
 describe("SessionTimeoutModal", () => {
@@ -165,7 +164,12 @@ describe("SessionTimeoutModal", () => {
     })
 
     it("shows the select role instruction and close button text on the select your role path", () => {
-      render(<SessionTimeoutModal {...defaultProps} isSelectYourRolePath={true} />)
+      mockUseLocation.mockReturnValue({
+        pathname: FRONTEND_PATHS.SELECT_YOUR_ROLE
+      })
+      mockNormalizePath.mockReturnValue(FRONTEND_PATHS.SELECT_YOUR_ROLE)
+
+      render(<SessionTimeoutModal {...defaultProps} />)
 
       expect(
         screen.getByText(SESSION_TIMEOUT_MODAL_STRINGS.SELECT_YOUR_ROLE_INSTRUCTION)

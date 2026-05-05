@@ -195,13 +195,8 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
 
   const handleSessionTimeout = (remainingSeconds: number, remainingTime: number) => {
     const twoMinutes = 2 * 60 // 2 minutes in seconds
-    const currentPath = normalizePath(location.pathname)
 
     if (remainingSeconds <= twoMinutes && remainingSeconds > 0) {
-      if (currentPath === FRONTEND_PATHS.SELECT_YOUR_ROLE) {
-        return
-      }
-
       // Show timeout modal when 2 minutes or less remaining
       logger.info("Session timeout warning triggered - showing modal", {
         remainingTime,
@@ -242,6 +237,10 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
     const remainingTime = response.remainingSessionTime
     const remainingSeconds = remainingTime !== undefined ? Math.floor(remainingTime / 1000) : undefined
 
+    logger.debug("User info response received", {
+      remainingTime,
+      remainingSeconds
+    })
     if (remainingSeconds !== undefined && remainingTime !== undefined) {
       handleSessionTimeout(remainingSeconds, remainingTime)
     } else {

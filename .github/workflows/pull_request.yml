@@ -233,6 +233,7 @@ jobs:
       IS_PULL_REQUEST: true
       FORWARD_CSOC_LOGS: false
     secrets: inherit
+
   report_deployed_url:
     needs: [release_code, get_issue_number]
     if: |
