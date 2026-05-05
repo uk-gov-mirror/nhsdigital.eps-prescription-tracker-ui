@@ -2,7 +2,8 @@ import React, {
   createContext,
   useContext,
   useEffect,
-  ReactNode
+  ReactNode,
+  useRef
 } from "react"
 import {useLocation, useNavigate} from "react-router-dom"
 
@@ -31,6 +32,7 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
   const auth = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const wasRedirectedToLogout = useRef(false)
 
   useEffect(() => {
     const tabId = getOrCreateTabId()
@@ -130,6 +132,7 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
         path !== FRONTEND_PATHS.SESSION_LOGGED_OUT &&
         shouldRedirectDueToCrossTabLogout()
       ) {
+        wasRedirectedToLogout.current = true
         return redirect(FRONTEND_PATHS.LOGOUT, "Recent cross-tab logout detected - redirecting to logout page")
       }
 
@@ -175,6 +178,9 @@ export const AccessProvider = ({children}: {children: ReactNode}) => {
 
       if (!auth.isSigningOut && path === FRONTEND_PATHS.LOGOUT) {
         // If a user navigates directly to the logout page, forcefully log them out.
+        if (wasRedirectedToLogout.current) {
+          return redirect("/", "Cross-tab logout already handled, new session created, redirecting to root")
+        }
         return handleSignoutEvent(auth, navigate, "SignedIn-AtLogoutPath", auth.invalidSessionCause)
       }
 

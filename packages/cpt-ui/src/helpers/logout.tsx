@@ -50,7 +50,7 @@ export const signOut = async (
     const existingMarker = checkForRecentLogoutMarker("SignOut")
     if (existingMarker) {
       const openTabs = getOpenTabIds()
-      if (openTabs.includes(existingMarker.initiatedByTabId)) {
+      if (openTabs.includes(existingMarker?.initiatedByTabId)) {
         logger.info("Skipping duplicate signOut call due to in-progress marker from active tab")
         return
       }
@@ -129,7 +129,7 @@ const writeLogoutMarker = (marker: LogoutMarker) => {
 }
 
 /* Exported functions used within this helper, AuthProvider or AccessProvider */
-export const checkForRecentLogoutMarker = (caller?: string) => {
+export const checkForRecentLogoutMarker = (caller?: string): LogoutMarker | undefined => {
   const existingMarker = readLogoutMarker()
   if (existingMarker) {
     logger.info(`Found existing logout marker in storage. ${caller ? `Called by ${caller}` : ""}`, existingMarker)
